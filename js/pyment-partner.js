@@ -1,5 +1,3 @@
-
-<script>
 (function () {
   function insertPaymentOptions() {
     document.querySelectorAll(
@@ -61,5 +59,4 @@
     start();
   }
 })();
-</script>
 
