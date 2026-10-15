@@ -1,36 +1,41 @@
 
 /**
- * KERAPHO — SMART BREADCRUMB V2.0
- * Squarespace 7.0 — GitHub Edition
+ * KERAPHO — SMART BREADCRUMB V1.1
+ * Squarespace 7.0 | GitHub Edition
  *
- * - Categorie lette dal JSON prodotto
- * - Priorità alla categoria di provenienza
- * - Fallback deterministico
- * - Navigazione Mercury
+ * - Mantiene il rilevamento HTML della V1
+ * - Legge le categorie dal JSON del prodotto
+ * - Nessun elenco manuale di categorie merceologiche
+ * - Preferisce la categoria di provenienza
+ * - Declassa le categorie promozionali
+ * - Supporta la navigazione Mercury
  * - CSS integrato
  */
 
 (function () {
   "use strict";
 
-  const SHOP = "/shop";
-  const MAX_LENGTH = 35;
-  const STYLE_ID = "kerapho-breadcrumb-v2-style";
-  const STORAGE_KEY = "kerapho-breadcrumb-origin";
-  const SELECTORS = [
-    ".ProductItem-breadcrumbs",
-    ".product-breadcrumbs",
-    ".breadcrumbs"
-  ].join(", ");
+  // Evita registrazioni duplicate.
+  if (window.__keraphoBreadcrumbV11) return;
+  window.__keraphoBreadcrumbV11 = true;
+
+  const SHOP_PATH = "/shop";
+  const MAX_PRODUCT_LENGTH = 35;
+  const STORAGE_KEY = "kerapho_breadcrumb_origin_v11";
+  const STYLE_ID = "kerapho-breadcrumb-style-v11";
+
+  // Solo categorie da considerare promozionali.
+  const PROMOTIONAL_CATEGORIES = [
+    "Offerte"
+  ];
 
   let currentRun = 0;
-  let retryTimer = null;
 
   // ==========================================
-  // CSS
+  // 1. CSS INTEGRATO
   // ==========================================
 
-  function injectCSS() {
+  function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
 
     const style = document.createElement("style");
@@ -38,7 +43,11 @@
 
     style.textContent = `
       body.kerapho-breadcrumb-loading
-      ${SELECTORS.split(", ").join(",\n      body.kerapho-breadcrumb-loading ")} {
+      .ProductItem-breadcrumbs,
+      body.kerapho-breadcrumb-loading
+      .product-breadcrumbs,
+      body.kerapho-breadcrumb-loading
+      .breadcrumbs {
         visibility: hidden !important;
       }
     `;
@@ -47,95 +56,93 @@
   }
 
   // ==========================================
-  // UTILITÀ
+  // 2. UTILITÀ
   // ==========================================
 
-  function normalizePath(value) {
+  function normalizePath(url) {
     try {
-      return new URL(value, location.origin)
-        .pathname.replace(/\/+$/, "").toLowerCase();
-    } catch (_) {
+      return new URL(url, location.origin)
+        .pathname
+        .replace(/\/+$/, "")
+        .toLowerCase();
+    } catch (error) {
       return "";
     }
   }
 
-  function shorten(text) {
-    const value = String(text || "")
-      .replace(/\s+/g, " ").trim();
-
-    return value.length > MAX_LENGTH
-      ? value.slice(0, MAX_LENGTH).trim() + "..."
-      : value;
+  function normalizeText(value) {
+    return String(value || "")
+      .trim()
+      .normalize("NFC")
+      .toLowerCase();
   }
 
-  function normalizeCategory(value) {
-    if (typeof value === "string") {
-      return value.trim();
+  function shortenProductName(name) {
+    const cleanName = String(name || "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (cleanName.length <= MAX_PRODUCT_LENGTH) {
+      return cleanName;
     }
 
-    if (value && typeof value === "object") {
-      const name = value.name || value.title || value.label;
-      return typeof name === "string" ? name.trim() : "";
-    }
-
-    return "";
+    return cleanName
+      .substring(0, MAX_PRODUCT_LENGTH)
+      .trim() + "...";
   }
 
-  function getCategories(data) {
-    const item = data && data.item;
-    if (!item) return [];
-
-    const source = item.categories;
-    if (!Array.isArray(source)) return [];
-
-    return [...new Set(
-      source.map(normalizeCategory).filter(Boolean)
-    )];
+  function isProductPage(path) {
+    return path.startsWith(SHOP_PATH + "/");
   }
 
   // ==========================================
-  // PROVENIENZA
+  // 3. MEMORIZZA LA PROVENIENZA
   // ==========================================
 
-  function readOrigin() {
+  function rememberOrigin(productPath, category) {
+    if (!category) return;
+
+    try {
+      sessionStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          product: productPath,
+          category: category
+        })
+      );
+    } catch (error) {}
+  }
+
+  function getSavedOrigin(path) {
     try {
       const saved = JSON.parse(
         sessionStorage.getItem(STORAGE_KEY) || "null"
       );
 
-      return saved && saved.product === normalizePath(location.href)
-        ? saved.category
-        : null;
-    } catch (_) {
+      if (saved && saved.product === path) {
+        return saved.category;
+      }
+    } catch (error) {}
+
+    return null;
+  }
+
+  function getCategoryFromURL(url) {
+    try {
+      const parsed = new URL(url, location.origin);
+
+      if (normalizePath(parsed.href) !== SHOP_PATH) {
+        return null;
+      }
+
+      return parsed.searchParams.get("category");
+    } catch (error) {
       return null;
     }
   }
 
-  function rememberOrigin(product, category) {
-    if (!product || !category) return;
-
-    try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        product: normalizePath(product),
-        category: category
-      }));
-    } catch (_) {}
-  }
-
-  function getCategoryFromURL(value) {
-    try {
-      const url = new URL(value, location.origin);
-
-      if (normalizePath(url.href) !== SHOP) return null;
-
-      return url.searchParams.get("category");
-    } catch (_) {
-      return null;
-    }
-  }
-
-  // Registra la provenienza dai link prodotto
-  // quando il visitatore naviga da una categoria.
+  // Memorizza la categoria quando viene cliccato
+  // un prodotto da una pagina Shop filtrata.
   document.addEventListener("click", function (event) {
     const link = event.target.closest("a[href]");
     if (!link) return;
@@ -145,22 +152,24 @@
 
     const destination = normalizePath(link.href);
 
-    if (destination.startsWith(SHOP + "/")) {
-      rememberOrigin(link.href, category);
+    if (isProductPage(destination)) {
+      rememberOrigin(destination, category);
     }
   }, true);
 
   // ==========================================
-  // JSON SQUARESPACE
+  // 4. CATEGORIE DAL JSON SQUARESPACE
   // ==========================================
 
-  async function fetchProduct(path) {
+  async function getProductData(path) {
     const url = new URL(path, location.origin);
     url.searchParams.set("format", "json");
 
     const response = await fetch(url.href, {
       credentials: "same-origin",
-      headers: { Accept: "application/json" }
+      headers: {
+        Accept: "application/json"
+      }
     });
 
     if (!response.ok) {
@@ -170,152 +179,220 @@
     return response.json();
   }
 
+  function getCategories(data) {
+    const categories = data?.item?.categories;
+
+    if (!Array.isArray(categories)) return [];
+
+    return [...new Set(
+      categories.filter(category =>
+        typeof category === "string" &&
+        category.trim()
+      )
+    )];
+  }
+
   // ==========================================
-  // SELEZIONE CATEGORIA
+  // 5. SELEZIONE INTELLIGENTE
   // ==========================================
 
-  function selectCategory(categories) {
+  function selectCategory(categories, path) {
     if (!categories.length) return null;
 
-    const preferred = readOrigin() ||
+    const origin =
+      getSavedOrigin(path) ||
       getCategoryFromURL(document.referrer);
 
-    if (preferred) {
+    // Prima scelta: categoria di provenienza,
+    // ma soltanto se appartiene al prodotto.
+    if (origin) {
       const match = categories.find(category =>
-        category.normalize("NFC").toLowerCase() ===
-        preferred.normalize("NFC").toLowerCase()
+        normalizeText(category) === normalizeText(origin)
       );
 
       if (match) return match;
     }
 
-    // Scelta stabile quando non conosciamo
-    // la categoria di provenienza.
-    return [...categories].sort((a, b) =>
-      a.localeCompare(b, "it")
-    )[0];
+    // Seconda scelta: prima categoria
+    // non promozionale restituita da Squarespace.
+    const commercial = categories.find(category =>
+      !PROMOTIONAL_CATEGORIES.some(promo =>
+        normalizeText(promo) === normalizeText(category)
+      )
+    );
+
+    return commercial || categories[0];
   }
 
   // ==========================================
-  // BREADCRUMB
+  // 6. BREADCRUMB NATIVA — LOGICA V1
   // ==========================================
 
-  function findBreadcrumb() {
-    return document.querySelector(SELECTORS);
+  function findNativeBreadcrumb(currentPath) {
+    const links = document.querySelectorAll("a[href]");
+
+    for (const currentLink of links) {
+      if (
+        normalizePath(currentLink.getAttribute("href")) !==
+        currentPath
+      ) {
+        continue;
+      }
+
+      let parent = currentLink.parentElement;
+      let depth = 0;
+
+      while (parent && depth < 6) {
+        const parentLinks = parent.querySelectorAll("a[href]");
+        let shopLink = null;
+
+        for (const link of parentLinks) {
+          if (
+            normalizePath(link.getAttribute("href")) ===
+            SHOP_PATH
+          ) {
+            shopLink = link;
+            break;
+          }
+        }
+
+        if (shopLink) {
+          return {
+            container: parent,
+            currentLink: currentLink
+          };
+        }
+
+        parent = parent.parentElement;
+        depth++;
+      }
+    }
+
+    return null;
   }
 
-  function getProductName(data) {
-    const item = data && data.item;
+  // ==========================================
+  // 7. COSTRUZIONE BREADCRUMB
+  // ==========================================
 
-    const name = item && (item.title || item.name);
+  function renderBreadcrumb(
+    container,
+    productName,
+    category
+  ) {
+    container.replaceChildren();
 
-    return name ||
-      document.querySelector(".ProductItem-details-title")
-        ?.textContent?.trim() ||
-      document.title.split("|")[0].trim();
-  }
+    const shop = document.createElement("a");
+    shop.href = SHOP_PATH;
+    shop.textContent = "Shop";
 
-  function addLink(container, text, href) {
-    const link = document.createElement("a");
-    link.href = href;
-    link.textContent = text;
-    container.appendChild(link);
-  }
+    container.appendChild(shop);
 
-  function addSeparator(container) {
+    if (category) {
+      container.appendChild(
+        document.createTextNode(" / ")
+      );
+
+      const categoryLink = document.createElement("a");
+
+      categoryLink.href =
+        SHOP_PATH +
+        "?category=" +
+        encodeURIComponent(category);
+
+      categoryLink.textContent = category;
+
+      container.appendChild(categoryLink);
+    }
+
     container.appendChild(
       document.createTextNode(" / ")
     );
-  }
-
-  function renderBreadcrumb(container, name, category) {
-    container.replaceChildren();
-
-    addLink(container, "Shop", SHOP);
-
-    if (category) {
-      addSeparator(container);
-
-      addLink(
-        container,
-        category,
-        SHOP + "?category=" + encodeURIComponent(category)
-      );
-    }
-
-    addSeparator(container);
 
     const current = document.createElement("span");
-    current.textContent = shorten(name);
-    current.title = name;
+
+    current.textContent = shortenProductName(productName);
     current.setAttribute("aria-current", "page");
+    current.setAttribute("title", productName);
 
     container.appendChild(current);
   }
 
   // ==========================================
-  // INIZIALIZZAZIONE
+  // 8. AGGIORNAMENTO
   // ==========================================
 
   async function updateBreadcrumb() {
     const run = ++currentRun;
     const path = normalizePath(location.href);
 
-    clearTimeout(retryTimer);
-
     document.body.classList.remove(
       "kerapho-breadcrumb-loading"
     );
 
-    if (!path.startsWith(SHOP + "/")) return;
+    if (!isProductPage(path)) return;
 
-    let container = null;
+    // Aspetta la breadcrumb nativa,
+    // mantenendo il rilevamento originale.
+    let breadcrumb = null;
 
-    // Attende il rendering della breadcrumb nativa.
     for (let attempt = 0; attempt < 40; attempt++) {
-      if (run !== currentRun ||
-          normalizePath(location.href) !== path) return;
+      if (
+        run !== currentRun ||
+        normalizePath(location.href) !== path
+      ) return;
 
-      container = findBreadcrumb();
+      breadcrumb = findNativeBreadcrumb(path);
 
-      if (container) break;
+      if (breadcrumb) break;
 
       await new Promise(resolve =>
         setTimeout(resolve, 250)
       );
     }
 
-    if (!container) return;
+    if (!breadcrumb) {
+      console.warn(
+        "[Kerapho Breadcrumb] Breadcrumb nativa non trovata."
+      );
+      return;
+    }
+
+    const container = breadcrumb.container;
+    const originalProductName =
+      breadcrumb.currentLink.textContent.trim();
 
     document.body.classList.add(
       "kerapho-breadcrumb-loading"
     );
 
     try {
-      const data = await fetchProduct(path);
+      const data = await getProductData(path);
 
-      if (run !== currentRun ||
-          normalizePath(location.href) !== path ||
-          !container.isConnected) return;
+      if (
+        run !== currentRun ||
+        normalizePath(location.href) !== path ||
+        !container.isConnected
+      ) return;
 
       const categories = getCategories(data);
-      const category = selectCategory(categories);
-      const productName = getProductName(data);
+      const category = selectCategory(categories, path);
 
       renderBreadcrumb(
         container,
-        productName,
+        originalProductName,
         category
       );
 
-      console.log(
-        "[Kerapho Breadcrumb V2]",
-        { category, categories }
-      );
+      console.log("[Kerapho Breadcrumb V1.1]", {
+        prodotto: originalProductName,
+        categorie: categories,
+        categoriaSelezionata: category
+      });
 
     } catch (error) {
-      console.warn(
-        "[Kerapho Breadcrumb V2]",
+      console.error(
+        "[Kerapho Breadcrumb V1.1]",
         error
       );
     } finally {
@@ -327,25 +404,34 @@
     }
   }
 
-  function scheduleUpdate() {
-    clearTimeout(retryTimer);
-    retryTimer = setTimeout(updateBreadcrumb, 80);
-  }
+  // ==========================================
+  // 9. INIZIALIZZAZIONE
+  // ==========================================
 
   function start() {
-    injectCSS();
-    scheduleUpdate();
+    injectStyles();
+    updateBreadcrumb();
   }
 
   if (document.readyState === "loading") {
     document.addEventListener(
-      "DOMContentLoaded", start, { once: true }
+      "DOMContentLoaded",
+      start,
+      { once: true }
     );
   } else {
     start();
   }
 
-  window.addEventListener("mercury:load", scheduleUpdate);
-  window.addEventListener("pageshow", scheduleUpdate);
+  window.addEventListener(
+    "mercury:load",
+    updateBreadcrumb
+  );
+
+  window.addEventListener(
+    "pageshow",
+    updateBreadcrumb
+  );
 
 })();
+
