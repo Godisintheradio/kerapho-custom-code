@@ -1,3 +1,6 @@
+
+
+<style>
 /* Nasconde la breadcrumb nativa finché non è pronta */
 body:not(.kerapho-breadcrumb-ready) .ProductItem-breadcrumbs,
 body:not(.kerapho-breadcrumb-ready) .product-breadcrumbs,
@@ -583,3 +586,5 @@ document.addEventListener("DOMContentLoaded", function () {
   updateBreadcrumb();
 
 });
+</script>
+
