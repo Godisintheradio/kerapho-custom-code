@@ -1,3 +1,114 @@
 // KERAPHO — Product Tags
 // Squarespace 7.0
 // Versione 1.0
+
+
+
+<script>
+(function () {
+  "use strict";
+
+  let currentRun = 0;
+
+  function isUppercase(tag) {
+    const text = tag.trim();
+
+    return (
+      text === text.toUpperCase() &&
+      text !== text.toLowerCase()
+    );
+  }
+
+  async function showProductTags() {
+    const run = ++currentRun;
+    const path = location.pathname;
+
+    // Aspetta che la descrizione sia disponibile.
+    let description;
+
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (run !== currentRun || location.pathname !== path) return;
+
+      description = document.querySelector(
+        ".ProductItem-details-excerpt"
+      );
+
+      if (description) break;
+
+      await new Promise(resolve => setTimeout(resolve, 250));
+    }
+
+    if (!description) return;
+    if (document.getElementById("kerapho-product-tags")) return;
+
+    try {
+      const url = new URL(path, location.origin);
+      url.searchParams.set("format", "json");
+
+      const response = await fetch(url.href, {
+        credentials: "same-origin"
+      });
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+      const tags = data.item && data.item.tags;
+      const collection = data.collection && data.collection.fullUrl;
+
+      if (
+        run !== currentRun ||
+        location.pathname !== path ||
+        !description.isConnected
+      ) return;
+
+      if (!Array.isArray(tags) || !tags.length || !collection) return;
+      if (document.getElementById("kerapho-product-tags")) return;
+
+      // Porta prima i tag maiuscoli, mantenendo l'ordine
+      // originale all'interno dei due gruppi.
+      const orderedTags = [...new Set(tags)]
+        .filter(tag => typeof tag === "string" && tag.trim())
+        .sort((a, b) =>
+          Number(isUppercase(b)) - Number(isUppercase(a))
+        );
+
+      if (!orderedTags.length) return;
+
+      const box = document.createElement("nav");
+      box.id = "kerapho-product-tags";
+      box.className = "kerapho-product-tags";
+      box.setAttribute("aria-label", "Tag del prodotto");
+
+      orderedTags.forEach(tag => {
+        const link = document.createElement("a");
+        const destination = new URL(collection, location.origin);
+
+        destination.search = "";
+        destination.hash = "";
+        destination.searchParams.set("tag", tag);
+
+        link.className = "kerapho-product-tag";
+        link.textContent = tag;
+        link.href = destination.href;
+
+        box.appendChild(link);
+      });
+
+      description.insertAdjacentElement("afterend", box);
+
+      console.log("[Kerapho Tag] Etichette inserite.");
+
+    } catch (error) {
+      console.error("[Kerapho Tag]", error);
+    }
+  }
+
+  // Parte subito, anche se l'evento di caricamento è già passato.
+  showProductTags();
+
+  window.addEventListener("mercury:load", showProductTags);
+  window.addEventListener("pageshow", showProductTags);
+})();
+</script>
