@@ -4,11 +4,76 @@
 
 
 
-<script>
+/**
+ * KERAPHO — PRODUCT TAGS
+ * Squarespace 7.0
+ * Versione 1.1 — GitHub Edition
+ *
+ * Funzioni:
+ * - Recupero tag dal JSON Squarespace
+ * - Tag maiuscoli visualizzati per primi
+ * - Collegamenti alla collezione di origine
+ * - Supporto alla navigazione AJAX Mercury
+ * - CSS integrato
+ */
+
 (function () {
   "use strict";
 
-  let currentRun = 0;
+  const STYLE_ID = "kerapho-product-tags-style";
+  const BOX_ID = "kerapho-product-tags";
+
+  // ==========================================
+  // 1. CSS INTEGRATO
+  // ==========================================
+
+  function injectStyles() {
+    if (document.getElementById(STYLE_ID)) return;
+
+    const css = `
+      /* KERAPHO — TAG PAGINA PRODOTTO */
+
+      .kerapho-product-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 18px 0;
+      }
+
+      .kerapho-product-tags a.kerapho-product-tag {
+        display: inline-block;
+        padding: 6px 11px;
+        border: 1px solid #dedede;
+        border-radius: 4px;
+        background: #fff;
+        color: #222;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1.4;
+        text-decoration: none !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        overflow-wrap: anywhere;
+        transition: color 0.2s ease, border-color 0.2s ease;
+      }
+
+      .kerapho-product-tags a.kerapho-product-tag:hover,
+      .kerapho-product-tags a.kerapho-product-tag:focus-visible {
+        color: hsl(0, 100%, 36%);
+        border-color: hsl(0, 100%, 36%);
+      }
+    `;
+
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = css;
+
+    document.head.appendChild(style);
+  }
+
+  // ==========================================
+  // 2. ORDINAMENTO TAG
+  // ==========================================
 
   function isUppercase(tag) {
     const text = tag.trim();
@@ -19,11 +84,16 @@
     );
   }
 
+  // ==========================================
+  // 3. MOTORE PRODUCT TAGS
+  // ==========================================
+
+  let currentRun = 0;
+
   async function showProductTags() {
     const run = ++currentRun;
     const path = location.pathname;
 
-    // Aspetta che la descrizione sia disponibile.
     let description;
 
     for (let attempt = 0; attempt < 40; attempt++) {
@@ -39,7 +109,7 @@
     }
 
     if (!description) return;
-    if (document.getElementById("kerapho-product-tags")) return;
+    if (document.getElementById(BOX_ID)) return;
 
     try {
       const url = new URL(path, location.origin);
@@ -64,10 +134,8 @@
       ) return;
 
       if (!Array.isArray(tags) || !tags.length || !collection) return;
-      if (document.getElementById("kerapho-product-tags")) return;
+      if (document.getElementById(BOX_ID)) return;
 
-      // Porta prima i tag maiuscoli, mantenendo l'ordine
-      // originale all'interno dei due gruppi.
       const orderedTags = [...new Set(tags)]
         .filter(tag => typeof tag === "string" && tag.trim())
         .sort((a, b) =>
@@ -77,7 +145,7 @@
       if (!orderedTags.length) return;
 
       const box = document.createElement("nav");
-      box.id = "kerapho-product-tags";
+      box.id = BOX_ID;
       box.className = "kerapho-product-tags";
       box.setAttribute("aria-label", "Tag del prodotto");
 
@@ -105,10 +173,15 @@
     }
   }
 
-  // Parte subito, anche se l'evento di caricamento è già passato.
+  // ==========================================
+  // 4. INIZIALIZZAZIONE
+  // ==========================================
+
+  injectStyles();
   showProductTags();
 
   window.addEventListener("mercury:load", showProductTags);
   window.addEventListener("pageshow", showProductTags);
+
 })();
-</script>
+
