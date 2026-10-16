@@ -2248,6 +2248,13 @@
                 data.brand;
 
 
+            /*
+             * POSIZIONAMENTO MARCA
+             *
+             * La marca deve comparire SOPRA
+             * il titolo della card.
+             */
+
             title.insertAdjacentElement(
                 "beforebegin",
                 brand
