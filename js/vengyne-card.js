@@ -236,6 +236,7 @@
     }
 
 
+
     /* =====================================================
        2.1. RICONOSCIMENTO MARCA DAI TAG
        ===================================================== */
@@ -254,6 +255,7 @@
 
         }
 
+
         const candidates =
             tags.filter(
                 tag => {
@@ -263,13 +265,26 @@
                             tag || ""
                         ).trim();
 
-                    if (!value) {
+
+                    if (
+                        !value
+                    ) {
+
                         return false;
+
                     }
+
 
                     /*
                      * Esclude i tag che rappresentano
                      * formati / misure.
+                     *
+                     * Esempi:
+                     *
+                     * 60X120CM
+                     * 60X120
+                     * 30X60,3CM
+                     * 29,5X59
                      */
 
                     const isFormat =
@@ -278,9 +293,15 @@
                                 value
                             );
 
-                    if (isFormat) {
+
+                    if (
+                        isFormat
+                    ) {
+
                         return false;
+
                     }
+
 
                     /*
                      * La marca deve contenere almeno
@@ -298,6 +319,7 @@
 
                 }
             );
+
 
         return (
             candidates[0] ||
@@ -1267,13 +1289,12 @@
             /*
              * TAG PRODOTTO
              *
-             * In Squarespace 7.0 i tag vengono
-             * esposti nel JSON della pagina
-             * come data.item.tags.
+             * Fonte verificata:
+             * ?format=json -> item.tags
              */
 
-            let tags =
-                [];
+            let jsonData =
+                null;
 
             try {
 
@@ -1308,20 +1329,8 @@
                     jsonResponse.ok
                 ) {
 
-                    const jsonData =
+                    jsonData =
                         await jsonResponse.json();
-
-
-                    if (
-                        Array.isArray(
-                            jsonData?.item?.tags
-                        )
-                    ) {
-
-                        tags =
-                            jsonData.item.tags;
-
-                    }
 
                 }
 
@@ -1330,8 +1339,8 @@
                 error
             ) {
 
-                tags =
-                    [];
+                jsonData =
+                    null;
 
             }
 
@@ -1345,7 +1354,11 @@
                     variants,
 
                 tags:
-                    tags
+                    Array.isArray(
+                        jsonData?.item?.tags
+                    )
+                        ? jsonData.item.tags
+                        : []
 
             };
 
@@ -1387,6 +1400,18 @@
             getBrandTag(
                 productData.tags
             );
+
+
+        console.log(
+            "V-ENGINE CARD: BRAND",
+            {
+                tags:
+                    productData.tags,
+
+                brand:
+                    brand
+            }
+        );
 
 
         const variants =
@@ -2258,6 +2283,7 @@
         let html =
             "";
 
+
         /*
          * MARCA
          */
@@ -2273,9 +2299,6 @@
             `;
 
         }
-
-
-
 
 
         /*
