@@ -237,6 +237,77 @@
 
 
     /* =====================================================
+       2.1. RICONOSCIMENTO MARCA DAI TAG
+       ===================================================== */
+
+    function getBrandTag(
+        tags
+    ) {
+
+        if (
+            !Array.isArray(
+                tags
+            )
+        ) {
+
+            return null;
+
+        }
+
+        const candidates =
+            tags.filter(
+                tag => {
+
+                    const value =
+                        String(
+                            tag || ""
+                        ).trim();
+
+                    if (!value) {
+                        return false;
+                    }
+
+                    /*
+                     * Esclude i tag che rappresentano
+                     * formati / misure.
+                     */
+
+                    const isFormat =
+                        /^\d+(?:[.,]\d+)?\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:cm)?$/i
+                            .test(
+                                value
+                            );
+
+                    if (isFormat) {
+                        return false;
+                    }
+
+                    /*
+                     * La marca deve contenere almeno
+                     * una lettera ed essere interamente
+                     * maiuscola.
+                     */
+
+                    return (
+                        /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(
+                            value
+                        ) &&
+                        value ===
+                            value.toUpperCase()
+                    );
+
+                }
+            );
+
+        return (
+            candidates[0] ||
+            null
+        );
+
+    }
+
+
+    /* =====================================================
        3. PREZZO VARIANTE
        ===================================================== */
 
@@ -1193,13 +1264,88 @@
              * la variante nel context.
              */
 
+            /*
+             * TAG PRODOTTO
+             *
+             * In Squarespace 7.0 i tag vengono
+             * esposti nel JSON della pagina
+             * come data.item.tags.
+             */
+
+            let tags =
+                [];
+
+            try {
+
+                const jsonUrl =
+                    new URL(
+                        url,
+                        location.origin
+                    );
+
+                jsonUrl.searchParams.set(
+                    "format",
+                    "json"
+                );
+
+
+                const jsonResponse =
+                    await fetch(
+                        jsonUrl.href,
+                        {
+                            credentials:
+                                "same-origin",
+
+                            headers: {
+                                Accept:
+                                    "application/json"
+                            }
+                        }
+                    );
+
+
+                if (
+                    jsonResponse.ok
+                ) {
+
+                    const jsonData =
+                        await jsonResponse.json();
+
+
+                    if (
+                        Array.isArray(
+                            jsonData?.item?.tags
+                        )
+                    ) {
+
+                        tags =
+                            jsonData.item.tags;
+
+                    }
+
+                }
+
+            }
+            catch (
+                error
+            ) {
+
+                tags =
+                    [];
+
+            }
+
+
             return {
 
                 excerpt:
                     excerpt,
 
                 variants:
-                    variants
+                    variants,
+
+                tags:
+                    tags
 
             };
 
@@ -1235,6 +1381,12 @@
         const excerpt =
             productData.excerpt ||
             "";
+
+
+        const brand =
+            getBrandTag(
+                productData.tags
+            );
 
 
         const variants =
@@ -1474,6 +1626,9 @@
                     simpleProduct:
                         true,
 
+                    brand:
+                        brand,
+
                     price:
                         null,
 
@@ -1517,6 +1672,9 @@
 
                     simpleProduct:
                         true,
+
+                    brand:
+                        brand,
 
                     price:
                         prezzoFinale,
@@ -2099,6 +2257,25 @@
 
         let html =
             "";
+
+        /*
+         * MARCA
+         */
+
+        if (
+            data.brand
+        ) {
+
+            html += `
+                <div class="ag-vengine-card-brand">
+                    ${data.brand}
+                </div>
+            `;
+
+        }
+
+
+
 
 
         /*
