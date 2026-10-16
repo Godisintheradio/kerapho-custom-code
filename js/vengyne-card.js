@@ -236,7 +236,6 @@
     }
 
 
-
     /* =====================================================
        2.1. RICONOSCIMENTO MARCA DAI TAG
        ===================================================== */
@@ -255,7 +254,6 @@
 
         }
 
-
         const candidates =
             tags.filter(
                 tag => {
@@ -265,27 +263,9 @@
                             tag || ""
                         ).trim();
 
-
-                    if (
-                        !value
-                    ) {
-
+                    if (!value) {
                         return false;
-
                     }
-
-
-                    /*
-                     * Esclude i tag che rappresentano
-                     * formati / misure.
-                     *
-                     * Esempi:
-                     *
-                     * 60X120CM
-                     * 60X120
-                     * 30X60,3CM
-                     * 29,5X59
-                     */
 
                     const isFormat =
                         /^\d+(?:[.,]\d+)?\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:cm)?$/i
@@ -293,21 +273,9 @@
                                 value
                             );
 
-
-                    if (
-                        isFormat
-                    ) {
-
+                    if (isFormat) {
                         return false;
-
                     }
-
-
-                    /*
-                     * La marca deve contenere almeno
-                     * una lettera ed essere interamente
-                     * maiuscola.
-                     */
 
                     return (
                         /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(
@@ -320,11 +288,7 @@
                 }
             );
 
-
-        return (
-            candidates[0] ||
-            null
-        );
+        return candidates[0] || null;
 
     }
 
@@ -1286,13 +1250,6 @@
              * la variante nel context.
              */
 
-            /*
-             * TAG PRODOTTO
-             *
-             * Fonte verificata:
-             * ?format=json -> item.tags
-             */
-
             let jsonData =
                 null;
 
@@ -1309,7 +1266,6 @@
                     "json"
                 );
 
-
                 const jsonResponse =
                     await fetch(
                         jsonUrl.href,
@@ -1323,7 +1279,6 @@
                             }
                         }
                     );
-
 
                 if (
                     jsonResponse.ok
@@ -1400,18 +1355,6 @@
             getBrandTag(
                 productData.tags
             );
-
-
-        console.log(
-            "V-ENGINE CARD: BRAND",
-            {
-                tags:
-                    productData.tags,
-
-                brand:
-                    brand
-            }
-        );
 
 
         const variants =
@@ -2270,6 +2213,49 @@
         }
 
 
+        /*
+         * MARCA
+         *
+         * La marca viene inserita direttamente
+         * prima del titolo della card.
+         */
+
+        const title =
+            card.querySelector(
+                ".ProductList-title"
+            );
+
+
+        if (
+            data.brand &&
+            title &&
+            !card.querySelector(
+                ".ag-vengine-card-brand"
+            )
+        ) {
+
+            const brand =
+                document.createElement(
+                    "div"
+                );
+
+
+            brand.className =
+                "ag-vengine-card-brand";
+
+
+            brand.textContent =
+                data.brand;
+
+
+            title.insertAdjacentElement(
+                "beforebegin",
+                brand
+            );
+
+        }
+
+
         const info =
             document.createElement(
                 "div"
@@ -2282,23 +2268,6 @@
 
         let html =
             "";
-
-
-        /*
-         * MARCA
-         */
-
-        if (
-            data.brand
-        ) {
-
-            html += `
-                <div class="ag-vengine-card-brand">
-                    ${data.brand}
-                </div>
-            `;
-
-        }
 
 
         /*
@@ -2426,6 +2395,7 @@
         );
 
     }
+
 
 
     /* =====================================================
