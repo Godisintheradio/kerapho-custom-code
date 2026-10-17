@@ -1323,20 +1323,178 @@
     );
 
   }
+
+
 /* ==========================================================
-   16. POSIZIONE MOBILE
+   KERAPHO — CREA SEARCH MOBILE
+   Usa lo stesso motore della Search originale.
+   Nessun fetch aggiuntivo.
    ========================================================== */
 
+function createMobileSearch() {
+
+  /* Cerca l'header reale di Squarespace */
+
+  const header =
+    document.querySelector(
+      'header'
+    );
+
+
+  if (!header) {
+
+    return false;
+
+  }
+
+
+  /* Recupera o crea la riga */
+
+  let mobileRow =
+    document.querySelector(
+      '.ag-mobile-search-row'
+    );
+
+
+  if (!mobileRow) {
+
+    mobileRow =
+      document.createElement(
+        'div'
+      );
+
+    mobileRow.className =
+      'ag-mobile-search-row';
+
+
+    header.insertAdjacentElement(
+      'afterend',
+      mobileRow
+    );
+
+  }
+
+
+  /* Recupera o crea la Search */
+
+  let mobileSearch =
+    mobileRow.querySelector(
+      '.Header-search'
+    );
+
+
+  if (!mobileSearch) {
+
+    mobileSearch =
+      document.createElement(
+        'div'
+      );
+
+    mobileSearch.className =
+      'Header-search';
+
+    mobileSearch.setAttribute(
+      'data-kerapho-mobile-search',
+      'true'
+    );
+
+
+    /* Form */
+
+    const form =
+      document.createElement(
+        'form'
+      );
+
+    form.setAttribute(
+      'role',
+      'search'
+    );
+
+    form.setAttribute(
+      'novalidate',
+      'true'
+    );
+
+
+    form.addEventListener(
+      'submit',
+      function(event) {
+
+        event.preventDefault();
+
+      }
+    );
+
+
+    /* Input */
+
+    const input =
+      document.createElement(
+        'input'
+      );
+
+    input.type =
+      'search';
+
+    input.placeholder =
+      'Cerca prodotti...';
+
+    input.setAttribute(
+      'aria-label',
+      'Cerca prodotti'
+    );
+
+    input.setAttribute(
+      'autocomplete',
+      'off'
+    );
+
+    input.setAttribute(
+      'spellcheck',
+      'false'
+    );
+
+
+    form.appendChild(
+      input
+    );
+
+
+    mobileSearch.appendChild(
+      form
+    );
+
+
+    mobileRow.appendChild(
+      mobileSearch
+    );
+
+  }
+
+
+  /* Aggancia le variabili globali
+     al nuovo contenitore */
+
+  searchContainer =
+    mobileSearch;
+
+
+  searchInput =
+    mobileSearch.querySelector(
+      'input'
+    );
+
+
+  return !!searchInput;
+
+}
+
+
+
+  
 /* ==========================================================
    16. POSIZIONE MOBILE
-
-   Desktop:
-   utilizza la .Header-search originale.
-
-   Mobile:
-   se Squarespace non rende disponibile
-   .Header-search, crea una versione
-   equivalente collegata allo stesso motore.
    ========================================================== */
 
 function setupMobilePosition() {
@@ -1656,24 +1814,11 @@ function setupMobilePosition() {
    17. INIT
    ========================================================== */
 
+/* ==========================================================
+   17. INIT
+   ========================================================== */
+
 function init() {
-
-  /*
-   * Prima prova a trovare la Search originale.
-   */
-
-  searchContainer =
-    document.querySelector(
-      '.Header-search'
-    );
-
-
-
-  /*
-   * Se siamo su MOBILE e Squarespace
-   * non ha fornito .Header-search,
-   * creiamo la nostra versione mobile.
-   */
 
   const mobileMedia =
     window.matchMedia(
@@ -1683,110 +1828,119 @@ function init() {
     );
 
 
-  if (
-    !searchContainer &&
-    mobileMedia.matches
-  ) {
-
-    setupMobilePosition();
-
-  }
-
-
-
-  /*
-   * Se dopo il tentativo non abbiamo
-   * una Search, usciamo.
-   */
-
-  if (
-    !searchContainer
-  ) {
-
-    console.log(
-      '[Kerapho Search] Search non disponibile'
-    );
-
-    return;
-
-  }
-
-
-
-  /*
-   * Recupera input.
-   */
-
-  searchInput =
-    searchContainer.querySelector(
-      'input'
-    );
-
-
-  if (
-    !searchInput
-  ) {
-
-    console.log(
-      '[Kerapho Search] Input non trovato'
-    );
-
-    return;
-
-  }
-
-
-
-  /*
-   * Placeholder.
-   */
-
-  searchInput.setAttribute(
-    'placeholder',
-    'Cerca prodotti...'
-  );
-
-
-
-  /*
-   * Pannello.
-   */
-
-  createPanel();
-
-
-
-  /*
-   * Ricerca live.
-   */
-
-  setupLiveSearch();
-
-
-
-  /*
-   * Su desktop manteniamo
-   * la gestione originale.
-   *
-   * Su mobile setupMobilePosition()
-   * ha già creato la Search.
-   */
+  /* ========================================================
+     DESKTOP
+     ======================================================== */
 
   if (
     !mobileMedia.matches
   ) {
 
+    searchContainer =
+      document.querySelector(
+        '.Header-search'
+      );
+
+
+    if (
+      !searchContainer
+    ) {
+
+      console.log(
+        '[Kerapho Search] .Header-search non trovata'
+      );
+
+      return;
+
+    }
+
+
+    searchInput =
+      searchContainer.querySelector(
+        'input'
+      );
+
+
+    if (
+      !searchInput
+    ) {
+
+      console.log(
+        '[Kerapho Search] Input non trovato'
+      );
+
+      return;
+
+    }
+
+
+    searchInput.setAttribute(
+      'placeholder',
+      'Cerca prodotti...'
+    );
+
+
+    createPanel();
+
+    setupLiveSearch();
+
     setupMobilePosition();
 
   }
 
 
+  /* ========================================================
+     MOBILE
+     ======================================================== */
 
-  /*
-   * PRELOAD ORIGINALE.
-   *
-   * Non viene modificato.
-   */
+  else {
+
+    /*
+     * Su mobile Squarespace può non fornire
+     * la .Header-search desktop.
+     *
+     * In questo caso creiamo la stessa struttura
+     * direttamente nella pagina.
+     */
+
+    if (
+      !createMobileSearch()
+    ) {
+
+      console.log(
+        '[Kerapho Search] Impossibile creare Search mobile'
+      );
+
+      return;
+
+    }
+
+
+    searchInput.setAttribute(
+      'placeholder',
+      'Cerca prodotti...'
+    );
+
+
+    /*
+     * Stesso pannello risultati
+     */
+
+    createPanel();
+
+
+    /*
+     * Stesso motore di ricerca
+     */
+
+    setupLiveSearch();
+
+  }
+
+
+  /* ========================================================
+     PRELOAD ORIGINALE
+     ======================================================== */
 
   setTimeout(
     function() {
