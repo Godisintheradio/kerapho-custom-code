@@ -136,11 +136,23 @@
       if (!Array.isArray(tags) || !tags.length || !collection) return;
       if (document.getElementById(BOX_ID)) return;
 
-      const orderedTags = [...new Set(tags)]
-        .filter(tag => typeof tag === "string" && tag.trim())
-        .sort((a, b) =>
-          Number(isUppercase(b)) - Number(isUppercase(a))
-        );
+// Riconosce i tag contenenti esclusivamente un formato.
+function isFormatTag(tag) {
+  return /^(?:formato\s*:?\s*)?\d+(?:[.,]\d+)?\s*(?:mm|cm|m)?(?:\s*[x×✕*]\s*\d+(?:[.,]\d+)?\s*(?:mm|cm|m)?){1,2}$/i.test(
+    tag.trim()
+  );
+}
+
+// Esclude i formati e mette prima i tag maiuscoli.
+const orderedTags = [...new Set(tags)]
+  .filter(tag =>
+    typeof tag === "string" &&
+    tag.trim() &&
+    !isFormatTag(tag)
+  )
+  .sort((a, b) =>
+    Number(isUppercase(b)) - Number(isUppercase(a))
+  );
 
       if (!orderedTags.length) return;
 
