@@ -4,7 +4,7 @@
 
 
     /* =====================================================
-       V-ENGINE CARD V2
+       V-CARD
        KERAPHO.IT
 
        SCOPO:
@@ -232,63 +232,6 @@
                 /\s+/g,
                 ""
             );
-
-    }
-
-
-    /* =====================================================
-       2.1. RICONOSCIMENTO MARCA DAI TAG
-       ===================================================== */
-
-    function getBrandTag(
-        tags
-    ) {
-
-        if (
-            !Array.isArray(
-                tags
-            )
-        ) {
-
-            return null;
-
-        }
-
-        const candidates =
-            tags.filter(
-                tag => {
-
-                    const value =
-                        String(
-                            tag || ""
-                        ).trim();
-
-                    if (!value) {
-                        return false;
-                    }
-
-                    const isFormat =
-                        /^\d+(?:[.,]\d+)?\s*[x×]\s*\d+(?:[.,]\d+)?\s*(?:cm)?$/i
-                            .test(
-                                value
-                            );
-
-                    if (isFormat) {
-                        return false;
-                    }
-
-                    return (
-                        /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(
-                            value
-                        ) &&
-                        value ===
-                            value.toUpperCase()
-                    );
-
-                }
-            );
-
-        return candidates[0] || null;
 
     }
 
@@ -1250,70 +1193,13 @@
              * la variante nel context.
              */
 
-            let jsonData =
-                null;
-
-            try {
-
-                const jsonUrl =
-                    new URL(
-                        url,
-                        location.origin
-                    );
-
-                jsonUrl.searchParams.set(
-                    "format",
-                    "json"
-                );
-
-                const jsonResponse =
-                    await fetch(
-                        jsonUrl.href,
-                        {
-                            credentials:
-                                "same-origin",
-
-                            headers: {
-                                Accept:
-                                    "application/json"
-                            }
-                        }
-                    );
-
-                if (
-                    jsonResponse.ok
-                ) {
-
-                    jsonData =
-                        await jsonResponse.json();
-
-                }
-
-            }
-            catch (
-                error
-            ) {
-
-                jsonData =
-                    null;
-
-            }
-
-
             return {
 
                 excerpt:
                     excerpt,
 
                 variants:
-                    variants,
-
-                tags:
-                    Array.isArray(
-                        jsonData?.item?.tags
-                    )
-                        ? jsonData.item.tags
-                        : []
+                    variants
 
             };
 
@@ -1349,12 +1235,6 @@
         const excerpt =
             productData.excerpt ||
             "";
-
-
-        const brand =
-            getBrandTag(
-                productData.tags
-            );
 
 
         const variants =
@@ -1594,9 +1474,6 @@
                     simpleProduct:
                         true,
 
-                    brand:
-                        brand,
-
                     price:
                         null,
 
@@ -1640,9 +1517,6 @@
 
                     simpleProduct:
                         true,
-
-                    brand:
-                        brand,
 
                     price:
                         prezzoFinale,
@@ -2213,56 +2087,6 @@
         }
 
 
-        /*
-         * MARCA
-         *
-         * La marca viene inserita direttamente
-         * prima del titolo della card.
-         */
-
-        const title =
-            card.querySelector(
-                ".ProductList-title"
-            );
-
-
-        if (
-            data.brand &&
-            title &&
-            !card.querySelector(
-                ".ag-vengine-card-brand"
-            )
-        ) {
-
-            const brand =
-                document.createElement(
-                    "div"
-                );
-
-
-            brand.className =
-                "ag-vengine-card-brand";
-
-
-            brand.textContent =
-                data.brand;
-
-
-            /*
-             * POSIZIONAMENTO MARCA
-             *
-             * La marca deve comparire SOPRA
-             * il titolo della card.
-             */
-
-            title.insertAdjacentElement(
-                "beforebegin",
-                brand
-            );
-
-        }
-
-
         const info =
             document.createElement(
                 "div"
@@ -2402,7 +2226,6 @@
         );
 
     }
-
 
 
     /* =====================================================
@@ -2684,3 +2507,4 @@
 
 
 })();
+
