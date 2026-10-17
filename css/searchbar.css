@@ -503,3 +503,89 @@
   }
 
 }
+
+
+/* ==========================================================
+   KERAPHO — MOBILE SEARCH
+   ========================================================== */
+
+@media screen and (max-width: 640px) {
+
+  .ag-mobile-search-row {
+    display: block !important;
+
+    width: 100% !important;
+
+    box-sizing: border-box;
+
+    position: relative;
+
+    margin: 0 !important;
+
+    padding: 10px 16px 14px !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+
+    overflow: visible !important;
+
+    z-index: 1000 !important;
+  }
+
+
+  .ag-mobile-search-row .Header-search {
+    display: block !important;
+
+    width: 100% !important;
+
+    max-width: none !important;
+
+    min-width: 0 !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    position: relative !important;
+
+    box-sizing: border-box;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+
+  .ag-mobile-search-row .Header-search form {
+    display: block !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+  }
+
+
+  .ag-mobile-search-row .Header-search input {
+    display: block !important;
+
+    width: 100% !important;
+
+    max-width: none !important;
+
+    min-width: 0 !important;
+
+    min-height: 44px;
+
+    box-sizing: border-box;
+
+    margin: 0 !important;
+
+    visibility: visible !important;
+
+    opacity: 1 !important;
+  }
+
+}
