@@ -1325,14 +1325,18 @@
   }
 /* ==========================================================
    16. POSIZIONE MOBILE
+   ========================================================== */
 
-   Usa la STESSA .Header-search originale.
-   Nessuna nuova search bar.
-   Nessun fetch aggiuntivo.
-   Nessun MutationObserver.
+/* ==========================================================
+   16. POSIZIONE MOBILE
 
-   Attende semplicemente che Squarespace
-   abbia creato la struttura Mobile-bar.
+   Desktop:
+   utilizza la .Header-search originale.
+
+   Mobile:
+   se Squarespace non rende disponibile
+   .Header-search, crea una versione
+   equivalente collegata allo stesso motore.
    ========================================================== */
 
 function setupMobilePosition() {
@@ -1346,309 +1350,279 @@ function setupMobilePosition() {
 
 
   /*
-   * Memorizza la posizione originale
-   * della search desktop.
+   * Se siamo su desktop utilizziamo
+   * esclusivamente la Search originale.
    */
 
-  const originalParent =
-    searchContainer.parentNode;
+  if (
+    !mobileMedia.matches
+  ) {
 
-
-  const originalNextSibling =
-    searchContainer.nextSibling;
-
-
-  let mobileRow = null;
-
-  let retryTimer = null;
-
-  let attempts = 0;
-
-  const maxAttempts = 20;
-
-
-
-  /* ========================================================
-     TROVA LA MOBILE BAR
-     ======================================================== */
-
-  function findMobileBar() {
-
-    const mobileSearchReference =
-      document.querySelector(
-        '.Mobile-bar-search'
-      );
-
-
-    if (!mobileSearchReference) {
-
-      return null;
-
-    }
-
-
-    return (
-      mobileSearchReference.closest(
-        '.Mobile-bar'
-      )
-      ||
-      mobileSearchReference.parentElement
-    );
+    return;
 
   }
 
 
 
-  /* ========================================================
-     PREPARA LA RIGA MOBILE
-     ======================================================== */
+  /*
+   * Cerca la Mobile Bar nativa Squarespace.
+   */
 
-  function prepareMobileRow() {
-
-    const mobileBar =
-      findMobileBar();
-
-
-    if (!mobileBar) {
-
-      return false;
-
-    }
+  const mobileSearchReference =
+    document.querySelector(
+      '.Mobile-bar-search'
+    );
 
 
-    /*
-     * Recupera una riga già esistente
-     * oppure la crea.
-     */
+  const mobileBar =
+    mobileSearchReference
+      ?.closest('.Mobile-bar')
+    ||
+    document.querySelector(
+      '.Mobile-bar'
+    );
+
+
+  if (!mobileBar) {
+
+    console.log(
+      '[Kerapho Search] Mobile-bar non trovata'
+    );
+
+    return;
+
+  }
+
+
+
+  /*
+   * Recupera la riga dedicata.
+   */
+
+  let mobileRow =
+    document.querySelector(
+      '.ag-mobile-search-row'
+    );
+
+
+  if (!mobileRow) {
 
     mobileRow =
-      document.querySelector(
-        '.ag-mobile-search-row'
+      document.createElement(
+        'div'
       );
 
-
-    if (!mobileRow) {
-
-      mobileRow =
-        document.createElement(
-          'div'
-        );
-
-
-      mobileRow.className =
-        'ag-mobile-search-row';
-
-
-      mobileBar.insertAdjacentElement(
-        'afterend',
-        mobileRow
-      );
-
-    }
-
-
-    /*
-     * Assicura che la riga sia
-     * immediatamente sotto la Mobile-bar.
-     */
-
-    if (
-      mobileRow.previousElementSibling !==
-      mobileBar
-    ) {
-
-      mobileBar.insertAdjacentElement(
-        'afterend',
-        mobileRow
-      );
-
-    }
-
-
-    return true;
+    mobileRow.className =
+      'ag-mobile-search-row';
 
   }
 
 
 
-  /* ========================================================
-     POSIZIONAMENTO
-     ======================================================== */
+  /*
+   * Posiziona la riga subito sotto
+   * la Mobile Bar.
+   */
 
-  function updatePosition() {
+  if (
+    mobileRow.previousElementSibling !==
+    mobileBar
+  ) {
 
-
-    /*
-     * Se siamo su mobile e la struttura
-     * non è ancora disponibile, proviamo
-     * nuovamente.
-     */
-
-    if (
-      mobileMedia.matches &&
-      !mobileRow
-    ) {
-
-      if (
-        !prepareMobileRow()
-      ) {
-
-        return false;
-
-      }
-
-    }
-
-
-
-    /*
-     * MOBILE
-     */
-
-    if (
-      mobileMedia.matches
-    ) {
-
-      if (
-        mobileRow &&
-        searchContainer.parentNode !==
-        mobileRow
-      ) {
-
-        mobileRow.appendChild(
-          searchContainer
-        );
-
-      }
-
-
-      return true;
-
-    }
-
-
-
-    /*
-     * DESKTOP
-     */
-
-    if (
-      mobileRow &&
-      searchContainer.parentNode ===
+    mobileBar.insertAdjacentElement(
+      'afterend',
       mobileRow
-    ) {
-
-      if (
-        originalNextSibling &&
-        originalNextSibling.parentNode ===
-        originalParent
-      ) {
-
-        originalParent.insertBefore(
-          searchContainer,
-          originalNextSibling
-        );
-
-      }
-
-      else {
-
-        originalParent.appendChild(
-          searchContainer
-        );
-
-      }
-
-    }
-
-
-    return true;
+    );
 
   }
 
 
 
-  /* ========================================================
-     TENTATIVI DI INIZIALIZZAZIONE
-     ======================================================== */
+  /*
+   * Se la .Header-search originale
+   * esiste, la utilizziamo.
+   */
 
-  function tryMobileSetup() {
-
-
-    if (
-      !mobileMedia.matches
-    ) {
-
-      updatePosition();
-
-      return;
-
-    }
-
-
-    if (
-      updatePosition()
-    ) {
-
-      /*
-       * Trovata.
-       * Non servono altri tentativi.
-       */
-
-      attempts = 0;
-
-      return;
-
-    }
-
-
-    /*
-     * Squarespace non ha ancora
-     * costruito la Mobile-bar.
-     */
-
-    if (
-      attempts >= maxAttempts
-    ) {
-
-      console.log(
-        '[Kerapho Search] Mobile-bar non disponibile'
-      );
-
-      return;
-
-    }
-
-
-    attempts++;
-
-
-    clearTimeout(
-      retryTimer
+  let mobileSearch =
+    mobileRow.querySelector(
+      '.Header-search'
     );
 
 
-    retryTimer =
-      setTimeout(
-        tryMobileSetup,
-        250
+  if (
+    !mobileSearch
+  ) {
+
+    /*
+     * Crea la stessa struttura logica
+     * della Search originale.
+     */
+
+    mobileSearch =
+      document.createElement(
+        'div'
       );
+
+    mobileSearch.className =
+      'Header-search';
+
+    mobileSearch.setAttribute(
+      'data-kerapho-mobile-search',
+      'true'
+    );
+
+
+
+    /*
+     * FORM
+     */
+
+    const form =
+      document.createElement(
+        'form'
+      );
+
+    form.setAttribute(
+      'role',
+      'search'
+    );
+
+    form.setAttribute(
+      'novalidate',
+      'true'
+    );
+
+
+
+    /*
+     * Evita il submit nativo.
+     */
+
+    form.addEventListener(
+      'submit',
+      function(event) {
+
+        event.preventDefault();
+
+      }
+    );
+
+
+
+    /*
+     * INPUT
+     */
+
+    const input =
+      document.createElement(
+        'input'
+      );
+
+    input.type =
+      'search';
+
+    input.placeholder =
+      'Cerca prodotti...';
+
+    input.setAttribute(
+      'aria-label',
+      'Cerca prodotti'
+    );
+
+    input.setAttribute(
+      'autocomplete',
+      'off'
+    );
+
+    input.setAttribute(
+      'spellcheck',
+      'false'
+    );
+
+
+
+    form.appendChild(
+      input
+    );
+
+
+    mobileSearch.appendChild(
+      form
+    );
+
+
+    mobileRow.appendChild(
+      mobileSearch
+    );
 
   }
 
 
 
-  /* ========================================================
-     AVVIO
-     ======================================================== */
+  /*
+   * IMPORTANTE:
+   * da questo punto in poi il motore
+   * utilizza la Search mobile appena creata.
+   */
 
-  tryMobileSetup();
+  searchContainer =
+    mobileSearch;
+
+
+  searchInput =
+    mobileSearch.querySelector(
+      'input'
+    );
 
 
 
-  /* ========================================================
-     CAMBIO DESKTOP / MOBILE
-     ======================================================== */
+  if (
+    !searchInput
+  ) {
+
+    console.log(
+      '[Kerapho Search] Input mobile non trovato'
+    );
+
+    return;
+
+  }
+
+
+
+  /*
+   * Placeholder.
+   */
+
+  searchInput.setAttribute(
+    'placeholder',
+    'Cerca prodotti...'
+  );
+
+
+
+  /*
+   * Crea il pannello risultati.
+   */
+
+  createPanel();
+
+
+
+  /*
+   * Attiva lo stesso identico
+   * motore Live Search.
+   */
+
+  setupLiveSearch();
+
+
+
+  /*
+   * Cambio breakpoint.
+   *
+   * Non facciamo nuovi fetch.
+   */
 
   if (
     typeof mobileMedia.addEventListener ===
@@ -1657,25 +1631,19 @@ function setupMobilePosition() {
 
     mobileMedia.addEventListener(
       'change',
-      function () {
+      function() {
 
-        attempts = 0;
+        if (
+          !mobileMedia.matches &&
+          mobileSearch.getAttribute(
+            'data-kerapho-mobile-search'
+          ) === 'true'
+        ) {
 
-        tryMobileSetup();
+          mobileSearch.style.display =
+            'none';
 
-      }
-    );
-
-  }
-
-  else {
-
-    mobileMedia.addListener(
-      function () {
-
-        attempts = 0;
-
-        tryMobileSetup();
+        }
 
       }
     );
@@ -1684,89 +1652,154 @@ function setupMobilePosition() {
 
 }
 
-  /* ==========================================================
-     17. INIT
-     ========================================================== */
+/* ==========================================================
+   17. INIT
+   ========================================================== */
 
-  function init() {
+function init() {
 
-    searchContainer =
-      document.querySelector(
-        '.Header-search'
-      );
+  /*
+   * Prima prova a trovare la Search originale.
+   */
 
-    if (
-      !searchContainer
-    ) {
-
-      console.log(
-        '[Kerapho Search] .Header-search non trovata'
-      );
-
-      return;
-
-    }
-
-    searchInput =
-      searchContainer.querySelector(
-        'input'
-      );
-
-    if (
-      !searchInput
-    ) {
-
-      console.log(
-        '[Kerapho Search] Input non trovato'
-      );
-
-      return;
-
-    }
-
-    /*
-     * Placeholder.
-     */
-
-    searchInput.setAttribute(
-      'placeholder',
-      'Cerca prodotti...'
+  searchContainer =
+    document.querySelector(
+      '.Header-search'
     );
 
-    /*
-     * Crea pannello.
-     */
 
-    createPanel();
 
-    /*
-     * Attiva ricerca live.
-     */
+  /*
+   * Se siamo su MOBILE e Squarespace
+   * non ha fornito .Header-search,
+   * creiamo la nostra versione mobile.
+   */
 
-    setupLiveSearch();
+  const mobileMedia =
+    window.matchMedia(
+      '(max-width: ' +
+      CONFIG.mobileBreakpoint +
+      'px)'
+    );
 
-    /*
-     * Sistema posizione mobile.
-     */
+
+  if (
+    !searchContainer &&
+    mobileMedia.matches
+  ) {
 
     setupMobilePosition();
 
-    /*
-     * Precarica indice prodotti.
-     */
+  }
 
-    setTimeout(
-      function () {
 
-        loadProductIndex();
 
-      },
+  /*
+   * Se dopo il tentativo non abbiamo
+   * una Search, usciamo.
+   */
 
-      CONFIG.preloadDelay
+  if (
+    !searchContainer
+  ) {
 
+    console.log(
+      '[Kerapho Search] Search non disponibile'
     );
 
+    return;
+
   }
+
+
+
+  /*
+   * Recupera input.
+   */
+
+  searchInput =
+    searchContainer.querySelector(
+      'input'
+    );
+
+
+  if (
+    !searchInput
+  ) {
+
+    console.log(
+      '[Kerapho Search] Input non trovato'
+    );
+
+    return;
+
+  }
+
+
+
+  /*
+   * Placeholder.
+   */
+
+  searchInput.setAttribute(
+    'placeholder',
+    'Cerca prodotti...'
+  );
+
+
+
+  /*
+   * Pannello.
+   */
+
+  createPanel();
+
+
+
+  /*
+   * Ricerca live.
+   */
+
+  setupLiveSearch();
+
+
+
+  /*
+   * Su desktop manteniamo
+   * la gestione originale.
+   *
+   * Su mobile setupMobilePosition()
+   * ha già creato la Search.
+   */
+
+  if (
+    !mobileMedia.matches
+  ) {
+
+    setupMobilePosition();
+
+  }
+
+
+
+  /*
+   * PRELOAD ORIGINALE.
+   *
+   * Non viene modificato.
+   */
+
+  setTimeout(
+    function() {
+
+      loadProductIndex();
+
+    },
+
+    CONFIG.preloadDelay
+
+  );
+
+}
 
   /* ==========================================================
      18. START
