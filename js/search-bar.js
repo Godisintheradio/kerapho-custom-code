@@ -1323,70 +1323,109 @@
     );
 
   }
+/* ==========================================================
+   16. POSIZIONE MOBILE
 
-  /* ==========================================================
-     16. POSIZIONE MOBILE
+   Usa la STESSA .Header-search originale.
+   Nessuna nuova search bar.
+   Nessun fetch aggiuntivo.
+   Nessun MutationObserver.
 
-     .Mobile-bar-search viene utilizzata
-     esclusivamente per individuare
-     correttamente la barra mobile Squarespace.
-     ========================================================== */
+   Attende semplicemente che Squarespace
+   abbia creato la struttura Mobile-bar.
+   ========================================================== */
 
-  function setupMobilePosition() {
+function setupMobilePosition() {
+
+  const mobileMedia =
+    window.matchMedia(
+      '(max-width: ' +
+      CONFIG.mobileBreakpoint +
+      'px)'
+    );
+
+
+  /*
+   * Memorizza la posizione originale
+   * della search desktop.
+   */
+
+  const originalParent =
+    searchContainer.parentNode;
+
+
+  const originalNextSibling =
+    searchContainer.nextSibling;
+
+
+  let mobileRow = null;
+
+  let retryTimer = null;
+
+  let attempts = 0;
+
+  const maxAttempts = 20;
+
+
+
+  /* ========================================================
+     TROVA LA MOBILE BAR
+     ======================================================== */
+
+  function findMobileBar() {
 
     const mobileSearchReference =
       document.querySelector(
         '.Mobile-bar-search'
       );
 
-    /*
-     * Se il template non presenta
-     * la struttura mobile, non facciamo nulla.
-     */
 
-    if (
-      !mobileSearchReference
-    ) {
+    if (!mobileSearchReference) {
 
-      console.log(
-        '[Kerapho Search] .Mobile-bar-search non trovata'
-      );
-
-      return;
+      return null;
 
     }
 
-    const mobileBar =
+
+    return (
       mobileSearchReference.closest(
         '.Mobile-bar'
-      ) ||
-      mobileSearchReference.parentElement;
+      )
+      ||
+      mobileSearchReference.parentElement
+    );
+
+  }
+
+
+
+  /* ========================================================
+     PREPARA LA RIGA MOBILE
+     ======================================================== */
+
+  function prepareMobileRow() {
+
+    const mobileBar =
+      findMobileBar();
+
 
     if (!mobileBar) {
 
-      return;
+      return false;
 
     }
 
-    /*
-     * Memorizza posizione desktop originale.
-     */
-
-    const originalParent =
-      searchContainer.parentNode;
-
-    const originalNextSibling =
-      searchContainer.nextSibling;
 
     /*
-     * Crea una riga dedicata
-     * sotto la Mobile-bar.
+     * Recupera una riga già esistente
+     * oppure la crea.
      */
 
-    let mobileRow =
+    mobileRow =
       document.querySelector(
         '.ag-mobile-search-row'
       );
+
 
     if (!mobileRow) {
 
@@ -1395,8 +1434,10 @@
           'div'
         );
 
+
       mobileRow.className =
         'ag-mobile-search-row';
+
 
       mobileBar.insertAdjacentElement(
         'afterend',
@@ -1405,113 +1446,243 @@
 
     }
 
-    /*
-     * Media query nativa.
-     */
-
-    const mobileMedia =
-      window.matchMedia(
-        '(max-width: ' +
-        CONFIG.mobileBreakpoint +
-        'px)'
-      );
-
-    function updatePosition() {
-
-      /*
-       * MOBILE
-       */
-
-      if (
-        mobileMedia.matches
-      ) {
-
-        if (
-          searchContainer.parentNode !==
-          mobileRow
-        ) {
-
-          mobileRow.appendChild(
-            searchContainer
-          );
-
-        }
-
-      }
-
-      /*
-       * DESKTOP
-       */
-
-      else {
-
-        if (
-          searchContainer.parentNode ===
-          mobileRow
-        ) {
-
-          if (
-            originalNextSibling &&
-            originalNextSibling.parentNode ===
-            originalParent
-          ) {
-
-            originalParent.insertBefore(
-              searchContainer,
-              originalNextSibling
-            );
-
-          }
-
-          else {
-
-            originalParent.appendChild(
-              searchContainer
-            );
-
-          }
-
-        }
-
-      }
-
-    }
 
     /*
-     * Applicazione iniziale.
-     */
-
-    updatePosition();
-
-    /*
-     * Cambiamento breakpoint.
+     * Assicura che la riga sia
+     * immediatamente sotto la Mobile-bar.
      */
 
     if (
-      typeof mobileMedia.addEventListener ===
-      'function'
+      mobileRow.previousElementSibling !==
+      mobileBar
     ) {
 
-      mobileMedia.addEventListener(
-        'change',
-        updatePosition
+      mobileBar.insertAdjacentElement(
+        'afterend',
+        mobileRow
       );
 
     }
 
-    else {
 
-      /*
-       * Compatibilità browser meno recenti.
-       */
-
-      mobileMedia.addListener(
-        updatePosition
-      );
-
-    }
+    return true;
 
   }
+
+
+
+  /* ========================================================
+     POSIZIONAMENTO
+     ======================================================== */
+
+  function updatePosition() {
+
+
+    /*
+     * Se siamo su mobile e la struttura
+     * non è ancora disponibile, proviamo
+     * nuovamente.
+     */
+
+    if (
+      mobileMedia.matches &&
+      !mobileRow
+    ) {
+
+      if (
+        !prepareMobileRow()
+      ) {
+
+        return false;
+
+      }
+
+    }
+
+
+
+    /*
+     * MOBILE
+     */
+
+    if (
+      mobileMedia.matches
+    ) {
+
+      if (
+        mobileRow &&
+        searchContainer.parentNode !==
+        mobileRow
+      ) {
+
+        mobileRow.appendChild(
+          searchContainer
+        );
+
+      }
+
+
+      return true;
+
+    }
+
+
+
+    /*
+     * DESKTOP
+     */
+
+    if (
+      mobileRow &&
+      searchContainer.parentNode ===
+      mobileRow
+    ) {
+
+      if (
+        originalNextSibling &&
+        originalNextSibling.parentNode ===
+        originalParent
+      ) {
+
+        originalParent.insertBefore(
+          searchContainer,
+          originalNextSibling
+        );
+
+      }
+
+      else {
+
+        originalParent.appendChild(
+          searchContainer
+        );
+
+      }
+
+    }
+
+
+    return true;
+
+  }
+
+
+
+  /* ========================================================
+     TENTATIVI DI INIZIALIZZAZIONE
+     ======================================================== */
+
+  function tryMobileSetup() {
+
+
+    if (
+      !mobileMedia.matches
+    ) {
+
+      updatePosition();
+
+      return;
+
+    }
+
+
+    if (
+      updatePosition()
+    ) {
+
+      /*
+       * Trovata.
+       * Non servono altri tentativi.
+       */
+
+      attempts = 0;
+
+      return;
+
+    }
+
+
+    /*
+     * Squarespace non ha ancora
+     * costruito la Mobile-bar.
+     */
+
+    if (
+      attempts >= maxAttempts
+    ) {
+
+      console.log(
+        '[Kerapho Search] Mobile-bar non disponibile'
+      );
+
+      return;
+
+    }
+
+
+    attempts++;
+
+
+    clearTimeout(
+      retryTimer
+    );
+
+
+    retryTimer =
+      setTimeout(
+        tryMobileSetup,
+        250
+      );
+
+  }
+
+
+
+  /* ========================================================
+     AVVIO
+     ======================================================== */
+
+  tryMobileSetup();
+
+
+
+  /* ========================================================
+     CAMBIO DESKTOP / MOBILE
+     ======================================================== */
+
+  if (
+    typeof mobileMedia.addEventListener ===
+    'function'
+  ) {
+
+    mobileMedia.addEventListener(
+      'change',
+      function () {
+
+        attempts = 0;
+
+        tryMobileSetup();
+
+      }
+    );
+
+  }
+
+  else {
+
+    mobileMedia.addListener(
+      function () {
+
+        attempts = 0;
+
+        tryMobileSetup();
+
+      }
+    );
+
+  }
+
+}
 
   /* ==========================================================
      17. INIT
