@@ -1,356 +1,4 @@
-/* ==========================================================
- SEARCH BAR GLOBAL PRODUCT
-   Squarespace 7.0
-   ========================================================== */
-
-.Header-search {
-  position: relative;
-
-  /* Occupa automaticamente tutto lo spazio disponibile */
-  flex: 1 1 auto;
-
-  width: auto;
-  min-width: 180px;
-  max-width: none;
-
-  margin-left: 4px;
-  margin-right: 4px;
-
-  z-index: 10000;
-}
-
-/* ==========================================================
-   LENTE INTERNA
-   ========================================================== */
-
-.Header-search::before {
-  content: "";
-
-  position: absolute;
-
-  left: 28px;
-  top: 50%;
-
-  width: 17px;
-  height: 17px;
-
-  transform: translateY(-50%);
-
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23555555' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
-
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-
-  pointer-events: none;
-
-  z-index: 5;
-}
-
-/* ==========================================================
-   CAMPO RICERCA
-   ========================================================== */
-
-.Header-search input {
-  display: block;
-
-  width: 100% !important;
-  max-width: none !important;
-
-  min-height: 46px;
-
-  box-sizing: border-box;
-
-  margin: 0;
-
-  /* Spazio per la lente */
-  padding: 11px 18px 11px 48px;
-
-  background: #e2e2e2;
-
-  border: 1px solid #c6c6c6;
-  border-radius: 24px;
-
-  font-size: 14px;
-  line-height: 1.4;
-
-  color: #111;
-
-  outline: none;
-
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.04);
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-/* Placeholder */
-
-.Header-search input::placeholder {
-  color: #656565;
-
-  opacity: 1;
-}
-
-/* Hover */
-
-.Header-search input:hover {
-  background: #dcdcdc;
-
-  border-color: #bababa;
-}
-
-/* Focus */
-
-.Header-search input:focus {
-  width: 100% !important;
-
-  background: #eeeeee;
-
-  border-color: #a8a8a8;
-
-  box-shadow:
-    0 0 0 2px rgba(0, 0, 0, 0.04);
-}
-
-/* ==========================================================
-   2. PANNELLO RISULTATI — DESKTOP
-   ========================================================== */
-
-.ag-product-search {
-  position: absolute;
-
-  top: calc(100% + 10px);
-  right: 0;
-
-  width: 600px;
-  max-width: calc(100vw - 24px);
-  max-height: 520px;
-
-  box-sizing: border-box;
-
-  padding: 8px;
-
-  overflow-x: hidden;
-  overflow-y: auto;
-
-  background: #fff;
-
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 14px;
-
-  box-shadow:
-    0 18px 45px rgba(0, 0, 0, 0.15),
-    0 3px 10px rgba(0, 0, 0, 0.06);
-
-  text-align: left;
-
-  opacity: 0;
-  visibility: hidden;
-
-  pointer-events: none;
-
-  transform: translateY(-5px);
-
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease,
-    visibility 0.18s ease;
-
-  z-index: 999999;
-}
-
-/* Pannello aperto */
-
-.ag-product-search.is-open {
-  opacity: 1;
-  visibility: visible;
-
-  pointer-events: auto;
-
-  transform: translateY(0);
-}
-
-/* ==========================================================
-   3. MESSAGGI DI STATO
-   ========================================================== */
-
-.ag-search-status {
-  padding: 20px 16px;
-
-  font-size: 13px;
-  line-height: 1.5;
-
-  color: #777;
-
-  text-align: center;
-}
-
-/* ==========================================================
-   4. SINGOLO RISULTATO
-   ========================================================== */
-
-.ag-search-result {
-  display: grid;
-
-  grid-template-columns: 62px minmax(0, 1fr);
-
-  gap: 14px;
-
-  align-items: center;
-
-  padding: 9px;
-
-  border-radius: 9px;
-
-  color: #111;
-
-  text-decoration: none;
-
-  text-align: left;
-
-  transition:
-    background 0.15s ease,
-    transform 0.15s ease;
-}
-
-/* Hover */
-
-.ag-search-result:hover,
-.ag-search-result:focus {
-  background: #f5f5f5;
-
-  text-decoration: none;
-}
-
-/* ==========================================================
-   5. IMMAGINE PRODOTTO
-   ========================================================== */
-
-.ag-search-image {
-  display: block;
-
-  width: 62px;
-  height: 62px;
-
-  object-fit: cover;
-
-  background: #f2f2f2;
-
-  border-radius: 7px;
-
-  flex-shrink: 0;
-}
-
-/* ==========================================================
-   6. INFORMAZIONI PRODOTTO
-   ========================================================== */
-
-.ag-search-info {
-  min-width: 0;
-
-  text-align: left;
-}
-
-/* Collection */
-
-.ag-search-collection {
-  display: block;
-
-  margin: 0 0 4px 0;
-
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 1.2;
-
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-
-  color: #999;
-
-  text-align: left;
-}
-
-/* Titolo */
-
-.ag-search-title {
-  display: block;
-
-  margin: 0 0 4px 0;
-
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.35;
-
-  color: #111;
-
-  text-align: left;
-}
-
-/* Prezzo */
-
-.ag-search-price {
-  display: block;
-
-  margin: 0;
-
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.3;
-
-  color: #555;
-
-  text-align: left;
-}
-
-/* ==========================================================
-   7. FOOTER RISULTATI
-   ========================================================== */
-
-.ag-search-footer {
-  margin-top: 6px;
-
-  padding: 11px 12px 8px;
-
-  border-top: 1px solid #eee;
-
-  font-size: 11px;
-  line-height: 1.4;
-
-  color: #888;
-
-  text-align: center;
-}
-
-/* ==========================================================
-   8. SCROLLBAR
-   ========================================================== */
-
-.ag-product-search::-webkit-scrollbar {
-  width: 6px;
-}
-
-.ag-product-search::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ag-product-search::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-
-  border-radius: 10px;
-}
-
-.ag-product-search::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
-}
-
-/* ==========================================================
-   9. RIGA MOBILE
-   Creata dal JavaScript
+Creata dal JavaScript
    ========================================================== */
 
 .ag-mobile-search-row {
@@ -360,172 +8,22 @@
 /* ==========================================================
    10. MOBILE
    ========================================================== */
-/* ==========================================================
-   KERAPHO — MOBILE SEARCH DEFINITIVA
-   ========================================================== */
 
 @media screen and (max-width: 640px) {
 
-  /* --------------------------------------------------------
-     RIGA SEARCH
-     -------------------------------------------------------- */
-
   .ag-mobile-search-row {
-    display: flex !important;
-
-    position: relative;
-
-    width: 100%;
-
-    box-sizing: border-box;
-
-    padding: 12px 16px 16px;
-
-    visibility: visible !important;
-
-    opacity: 1 !important;
-
-    z-index: 1000 !important;
-  }
-
-
-
-  /* --------------------------------------------------------
-     CONTENITORE SEARCH
-     -------------------------------------------------------- */
-
-  .ag-mobile-search-row .Header-search {
-
     display: block !important;
 
     position: relative !important;
 
     width: 100% !important;
 
-    max-width: none !important;
-
-    min-width: 0 !important;
+    box-sizing: border-box !important;
 
     margin: 0 !important;
-
-    padding: 0 !important;
-
-    visibility: visible !important;
-
-    opacity: 1 !important;
-
-    box-sizing: border-box;
-
-    z-index: 1000 !important;
-  }
-
-
-
-  /* --------------------------------------------------------
-     FORM
-     -------------------------------------------------------- */
-
-  .ag-mobile-search-row .Header-search form {
-
-    display: block !important;
-
-    width: 100% !important;
-
-    margin: 0 !important;
-
-    padding: 0 !important;
-  }
-
-
-
-  /* --------------------------------------------------------
-     INPUT
-     -------------------------------------------------------- */
-
-  .ag-mobile-search-row .Header-search input {
-
-    display: block !important;
-
-    width: 100% !important;
-
-    max-width: none !important;
-
-    min-height: 48px;
-
-    box-sizing: border-box;
-
-    margin: 0 !important;
-
-    padding: 12px 18px 12px 48px;
-
-    visibility: visible !important;
-
-    opacity: 1 !important;
-  }
-
-
-
-  /* --------------------------------------------------------
-     NASCONDE LA RICERCA NATIVA SOLO QUANDO
-     LA NOSTRA È STATA CORRETTAMENTE MONTATA
-     -------------------------------------------------------- */
-
-  body.kerapho-mobile-search-ready
-  .Mobile-bar-search {
-
-    display: none !important;
-  }
-
-
-
-  /* --------------------------------------------------------
-     MENU MOBILE SOPRA LA SEARCH
-     -------------------------------------------------------- */
-
-  body.is-mobile-overlay-active
-  .ag-mobile-search-row {
-
-    z-index: 0 !important;
-
-    pointer-events: none;
-  }
-
-
-
-  body.is-mobile-overlay-active
-  .ag-product-search {
-
-    opacity: 0 !important;
-
-    visibility: hidden !important;
-
-    pointer-events: none !important;
-  }
-
-}
-
-
-/* ==========================================================
-   KERAPHO — MOBILE SEARCH
-   ========================================================== */
-
-@media screen and (max-width: 640px) {
-
-  .ag-mobile-search-row {
-    display: block !important;
-
-    width: 100% !important;
-
-    box-sizing: border-box;
-
-    position: relative;
-
-    margin: 0 !important;
-
     padding: 10px 16px 14px !important;
 
     visibility: visible !important;
-
     opacity: 1 !important;
 
     overflow: visible !important;
@@ -533,29 +31,27 @@
     z-index: 1000 !important;
   }
 
-
   .ag-mobile-search-row .Header-search {
     display: block !important;
 
-    width: 100% !important;
-
-    max-width: none !important;
-
-    min-width: 0 !important;
-
-    margin: 0 !important;
-
-    padding: 0 !important;
-
     position: relative !important;
 
-    box-sizing: border-box;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    box-sizing: border-box !important;
 
     visibility: visible !important;
-
     opacity: 1 !important;
-  }
 
+    z-index: 1000 !important;
+  }
 
   .ag-mobile-search-row .Header-search form {
     display: block !important;
@@ -563,29 +59,44 @@
     width: 100% !important;
 
     margin: 0 !important;
-
     padding: 0 !important;
   }
-
 
   .ag-mobile-search-row .Header-search input {
     display: block !important;
 
     width: 100% !important;
-
+    min-width: 0 !important;
     max-width: none !important;
 
-    min-width: 0 !important;
+    min-height: 44px !important;
 
-    min-height: 44px;
-
-    box-sizing: border-box;
+    box-sizing: border-box !important;
 
     margin: 0 !important;
 
-    visibility: visible !important;
+    padding: 12px 18px 12px 48px !important;
 
+    visibility: visible !important;
     opacity: 1 !important;
+  }
+
+  /* Menu mobile sopra la search */
+
+  body.is-mobile-overlay-active
+  .ag-mobile-search-row {
+    z-index: 0 !important;
+
+    pointer-events: none;
+  }
+
+  body.is-mobile-overlay-active
+  .ag-product-search {
+    opacity: 0 !important;
+
+    visibility: hidden !important;
+
+    pointer-events: none !important;
   }
 
 }
