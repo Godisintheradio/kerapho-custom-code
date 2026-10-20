@@ -1,12 +1,10 @@
-/* KERAPHO mobile navigation v3 — H3 groups from /mega-menu.
+/* KERAPHO mobile navigation v4 — H3 groups from /mega-menu.
  * Independent mobile drawer; preserve desktop mega-menu.js.
  */
 (function () {
   "use strict";
-  if (window.__keraphoMobileMenuV3) return;
-  window.__keraphoMobileMenuV3 = true;
-  let request = null;
-  let installed = false;
+  if (window.__keraphoMobileMenuV4) return;
+  window.__keraphoMobileMenuV4 = true;
   const smallScreen = window.matchMedia("(max-width: 1024px)");
 
   function safeLink(source) {
@@ -54,7 +52,7 @@
 #kerapho-mobile-accordion .km-group{border-bottom:1px solid #e9e9e9}
 #kerapho-mobile-accordion .km-row{display:flex;align-items:center;min-height:56px;gap:8px}
 #kerapho-mobile-accordion a{color:#111!important;text-decoration:none!important;border:0!important;background-image:none!important;overflow-wrap:anywhere}
-#kerapho-mobile-accordion .km-title{display:block;flex:1;min-width:0;margin:0;padding:16px 4px;font:600 17px/1.35 inherit; font-family:inherit;font-size:17px;font-weight:600;line-height:1.35}
+#kerapho-mobile-accordion .km-title{display:block;flex:1;min-width:0;margin:0;padding:16px 4px;font-family:inherit;font-size:17px;font-weight:600;line-height:1.35}
 #kerapho-mobile-accordion button{appearance:none;border:0;background:transparent;color:inherit;cursor:pointer;font-family:inherit}
 #kerapho-mobile-accordion button.km-title{text-align:left}
 #kerapho-mobile-accordion .km-toggle{flex:0 0 48px;width:48px;min-height:48px;font-size:26px;line-height:1}
@@ -80,6 +78,7 @@
       list.className = "km-links";
       list.id = "km-category-" + index;
       list.hidden = true;
+      list.inert = true;
       const title = data.link || document.createElement(data.links.length ? "button" : "span");
       if (!data.link) title.textContent = data.title;
       title.className = "km-title";
@@ -93,9 +92,30 @@
         toggle.setAttribute("aria-controls", list.id);
         toggle.setAttribute("aria-expanded", "false");
         toggle.setAttribute("aria-label", "Espandi " + data.title);
+        let animation = null;
+        let expanded = false;
         function setOpen(open) {
+          const height = list.hidden ? 0 : list.getBoundingClientRect().height;
+          if (animation) { animation.cancel(); animation = null; }
+          expanded = open;
           group.classList.toggle("is-open", open);
-          list.hidden = !open;
+          list.hidden = false;
+          list.inert = !open;
+          const targetHeight = open ? list.getBoundingClientRect().height : 0;
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !list.animate) {
+            list.hidden = !open;
+          } else {
+            const effect = list.animate([
+              {height: height + "px", opacity: open ? 0.3 : 1, overflow: "hidden"},
+              {height: targetHeight + "px", opacity: open ? 1 : 0, overflow: "hidden"}
+            ], {duration: 260, easing: "cubic-bezier(.22,.61,.36,1)"});
+            animation = effect;
+            effect.onfinish = function () {
+              if (animation !== effect) return;
+              list.hidden = !expanded;
+              animation = null;
+            };
+          }
           toggle.textContent = open ? "−" : "+";
           toggle.setAttribute("aria-expanded", String(open));
           toggle.setAttribute("aria-label", (open ? "Chiudi " : "Espandi ") + data.title);
@@ -105,7 +125,7 @@
         function change(event) {
           event.preventDefault();
           event.stopPropagation();
-          const open = list.hidden;
+          const open = !expanded;
           Array.from(root.children).forEach(function (other) {
             if (other !== group && other.kmClose) other.kmClose();
           });
@@ -144,10 +164,14 @@
     const style = document.createElement("style");
     style.textContent = `
 #kerapho-mobile-drawer[hidden]{display:none!important}
-#kerapho-mobile-drawer{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.4);color:#111}
-#kerapho-mobile-drawer .km-sheet{position:absolute;inset:0 auto 0 0;width:min(92vw,440px);background:#fff;display:flex;flex-direction:column;box-shadow:8px 0 30px #0002}
+#kerapho-mobile-drawer{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.4);color:#111;opacity:0;transition:opacity 300ms ease}
+#kerapho-mobile-drawer .km-sheet{position:absolute;inset:0 auto 0 0;width:min(92vw,440px);background:#fff;display:flex;flex-direction:column;box-shadow:8px 0 30px #0002;transform:translateX(-100%);transition:transform 340ms cubic-bezier(.22,.61,.36,1);will-change:transform}
 #kerapho-mobile-drawer .km-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #eee;flex-shrink:0}
-#kerapho-mobile-drawer .km-head strong{font-size:20px}
+#kerapho-mobile-drawer.is-visible{opacity:1}
+#kerapho-mobile-drawer.is-visible .km-sheet{transform:translateX(0)}
+#kerapho-mobile-drawer .km-logo{display:flex;align-items:center;min-width:0;max-width:calc(100% - 64px);text-decoration:none;border:0}
+#kerapho-mobile-drawer .km-logo img{display:block;width:auto;height:auto;max-width:180px;max-height:48px;object-fit:contain}
+@media(prefers-reduced-motion:reduce){#kerapho-mobile-drawer,#kerapho-mobile-drawer .km-sheet{transition:none!important}}
 #kerapho-mobile-drawer .km-close{border:0;background:transparent;color:#111;width:48px;height:48px;font-size:32px;cursor:pointer}
 #kerapho-mobile-drawer .km-body{overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 20px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom));flex:1;min-height:0}
 #kerapho-mobile-drawer .km-status{padding:24px 0;font-size:16px}
@@ -164,8 +188,22 @@
     sheet.setAttribute("aria-label","Menu Kerapho");
     const head = document.createElement("div");
     head.className = "km-head";
-    const label = document.createElement("strong");
-    label.textContent = "Menu";
+    const label = document.createElement("a");
+    label.className = "km-logo";
+    label.href = "/";
+    label.setAttribute("aria-label","Kerapho — Homepage");
+    const logoSource = document.querySelector(
+      ".Mobile-bar-branding img, img.Mobile-bar-branding-logo, .Header-branding img, img.Header-branding-logo, header a[href='/'] img"
+    );
+    if (logoSource) {
+      const logo = document.createElement("img");
+      logo.src = logoSource.currentSrc || logoSource.getAttribute("src") || logoSource.getAttribute("data-src");
+      logo.alt = "Kerapho";
+      logo.decoding = "async";
+      label.appendChild(logo);
+    } else {
+      label.textContent = "KERAPHO";
+    }
     const closeButton = document.createElement("button");
     closeButton.type = "button";
     closeButton.className = "km-close";
@@ -182,16 +220,23 @@
     let ready = false;
     let savedOverflow = "";
     let background = [];
+    let closing = false;
+    let closeTimer = null;
+    let openFrame = null;
     function close() {
-      if (overlay.hidden) return;
-      overlay.hidden = true;
-      document.body.style.overflow = savedOverflow;
-      background.forEach(function (entry) {entry[0].inert = entry[1];});
-      background = [];
-      if (opener) {
-        opener.setAttribute("aria-expanded","false");
-        opener.focus();
-      }
+      if (overlay.hidden || closing) return;
+      closing = true;
+      if (openFrame !== null) cancelAnimationFrame(openFrame);
+      overlay.classList.remove("is-visible");
+      if (opener) opener.setAttribute("aria-expanded","false");
+      closeTimer = setTimeout(function () {
+        overlay.hidden = true;
+        document.body.style.overflow = savedOverflow;
+        background.forEach(function (entry) {entry[0].inert = entry[1];});
+        background = [];
+        closing = false;
+        if (opener && opener.isConnected) opener.focus();
+      }, window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 350);
     }
     function load() {
       if (ready || pending) return;
@@ -242,6 +287,12 @@
         .map(function (el) {const original = el.inert;el.inert = true;return [el,original];});
       document.body.style.overflow = "hidden";
       overlay.hidden = false;
+      // Paint the initial position before sliding the drawer into view.
+      openFrame = requestAnimationFrame(function () {
+        openFrame = requestAnimationFrame(function () {
+          if (!closing && !overlay.hidden) overlay.classList.add("is-visible");
+        });
+      });
       closeButton.focus();
       load();
     },true);
