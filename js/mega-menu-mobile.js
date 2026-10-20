@@ -1,10 +1,10 @@
-/* KERAPHO mobile navigation v2 — H3 groups from /mega-menu.
- * Keep the native drawer/close/scroll handling and desktop mega-menu.js.
+/* KERAPHO mobile navigation v3 — H3 groups from /mega-menu.
+ * Independent mobile drawer; preserve desktop mega-menu.js.
  */
 (function () {
   "use strict";
-  if (window.__keraphoMobileMenuV2) return;
-  window.__keraphoMobileMenuV2 = true;
+  if (window.__keraphoMobileMenuV3) return;
+  window.__keraphoMobileMenuV3 = true;
   let request = null;
   let installed = false;
   const smallScreen = window.matchMedia("(max-width: 1024px)");
@@ -137,55 +137,136 @@
     return root;
   }
 
-  function start() {
-    if (installed || request || !smallScreen.matches) return;
-    const menu = document.querySelector(".Mobile-overlay-nav");
-    if (!menu) return;
-    const trigger = Array.from(menu.querySelectorAll("a[href]")).find(function (a) {
-      const url = new URL(a.href, location.origin);
-      return url.origin === location.origin && url.pathname.replace(/\/+$/, "") === "/mega-menu";
-    });
-    if (!trigger) return;
-    request = fetch("/mega-menu", {credentials: "same-origin"})
-      .then(function (response) {
-        if (!response.ok) throw new Error("HTTP " + response.status);
-        return response.text();
-      })
-      .then(function (html) {
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        const content = doc.querySelector("main.Main .Main-content");
-        if (!content) throw new Error("Contenuto /mega-menu non trovato");
-        const groups = extract(content);
-        if (!groups.length) throw new Error("Nessun gruppo H3 trovato");
-        if (!trigger.isConnected || document.getElementById("kerapho-mobile-accordion")) return;
-        const root = build(groups);
-        styles();
-        trigger.insertAdjacentElement("afterend", root);
-        // Only hide the source link after a complete menu is available.
-        trigger.hidden = true;
-        trigger.style.setProperty("display", "none", "important");
-        const old = document.getElementById("kerapho-mobile-mega");
-        if (old) old.remove();
-        installed = true;
-        document.removeEventListener("pointerdown", start);
-        document.removeEventListener("click", start);
-        observer.disconnect();
-      })
-      .catch(function (error) {
-        // Keep the native Products link usable; no automatic request loop.
-        console.warn("Kerapho mobile menu v2:", error);
-      });
-  }
-  const observer = new MutationObserver(function () {
-    if (!request && !installed) start();
-  });
+
   function init() {
-    observer.observe(document.body, {childList:true, subtree:true});
-    document.addEventListener("pointerdown", start, {passive:true});
-    document.addEventListener("click", start, {passive:true});
-    smallScreen.addEventListener("change", start);
-    start();
+    if (document.getElementById("kerapho-mobile-drawer")) return;
+    styles();
+    const style = document.createElement("style");
+    style.textContent = `
+#kerapho-mobile-drawer[hidden]{display:none!important}
+#kerapho-mobile-drawer{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.4);color:#111}
+#kerapho-mobile-drawer .km-sheet{position:absolute;inset:0 auto 0 0;width:min(92vw,440px);background:#fff;display:flex;flex-direction:column;box-shadow:8px 0 30px #0002}
+#kerapho-mobile-drawer .km-head{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid #eee;flex-shrink:0}
+#kerapho-mobile-drawer .km-head strong{font-size:20px}
+#kerapho-mobile-drawer .km-close{border:0;background:transparent;color:#111;width:48px;height:48px;font-size:32px;cursor:pointer}
+#kerapho-mobile-drawer .km-body{overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:0 20px 24px;padding-bottom:max(24px,env(safe-area-inset-bottom));flex:1;min-height:0}
+#kerapho-mobile-drawer .km-status{padding:24px 0;font-size:16px}
+#kerapho-mobile-drawer a:focus-visible,#kerapho-mobile-drawer button:focus-visible{outline:2px solid hsl(0,100%,36%);outline-offset:2px}
+`;
+    document.head.appendChild(style);
+    const overlay = document.createElement("div");
+    overlay.id = "kerapho-mobile-drawer";
+    overlay.hidden = true;
+    const sheet = document.createElement("div");
+    sheet.className = "km-sheet";
+    sheet.setAttribute("role","dialog");
+    sheet.setAttribute("aria-modal","true");
+    sheet.setAttribute("aria-label","Menu Kerapho");
+    const head = document.createElement("div");
+    head.className = "km-head";
+    const label = document.createElement("strong");
+    label.textContent = "Menu";
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "km-close";
+    closeButton.textContent = "×";
+    closeButton.setAttribute("aria-label","Chiudi il menu");
+    const body = document.createElement("div");
+    body.className = "km-body";
+    head.append(label,closeButton);
+    sheet.append(head,body);
+    overlay.appendChild(sheet);
+    document.body.appendChild(overlay);
+    let opener = null;
+    let pending = null;
+    let ready = false;
+    let savedOverflow = "";
+    let background = [];
+    function close() {
+      if (overlay.hidden) return;
+      overlay.hidden = true;
+      document.body.style.overflow = savedOverflow;
+      background.forEach(function (entry) {entry[0].inert = entry[1];});
+      background = [];
+      if (opener) {
+        opener.setAttribute("aria-expanded","false");
+        opener.focus();
+      }
+    }
+    function load() {
+      if (ready || pending) return;
+      body.textContent = "Caricamento categorie…";
+      body.setAttribute("aria-busy","true");
+      pending = fetch("/mega-menu",{credentials:"same-origin"})
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.text();
+        })
+        .then(function (html) {
+          const doc = new DOMParser().parseFromString(html,"text/html");
+          const content = doc.querySelector("main.Main .Main-content") || doc.querySelector("main");
+          if (!content) throw new Error("Pagina sorgente non trovata");
+          const groups = extract(content);
+          if (!groups.length) throw new Error("Nessun H3 riconosciuto");
+          body.replaceChildren(build(groups));
+          ready = true;
+        })
+        .catch(function (error) {
+          body.replaceChildren();
+          const message = document.createElement("p");
+          message.className = "km-status";
+          message.textContent = "Non è stato possibile caricare le categorie.";
+          const fallback = document.createElement("a");
+          fallback.href = "/mega-menu";
+          fallback.textContent = "Apri la pagina prodotti";
+          const retry = document.createElement("button");
+          retry.type = "button";
+          retry.textContent = "Riprova";
+          retry.addEventListener("click",function () {pending = null;load();});
+          body.append(message,fallback,document.createElement("br"),retry);
+          console.warn("Kerapho menu mobile:",error);
+        })
+        .finally(function () {body.removeAttribute("aria-busy");});
+    }
+    document.addEventListener("click",function (event) {
+      const button = event.target.closest && event.target.closest("button.Mobile-bar-menu");
+      if (!button) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!overlay.hidden) {close();return;}
+      opener = button;
+      button.setAttribute("aria-controls",overlay.id);
+      button.setAttribute("aria-expanded","true");
+      savedOverflow = document.body.style.overflow;
+      background = Array.from(document.body.children).filter(function (el) {return el !== overlay;})
+        .map(function (el) {const original = el.inert;el.inert = true;return [el,original];});
+      document.body.style.overflow = "hidden";
+      overlay.hidden = false;
+      closeButton.focus();
+      load();
+    },true);
+    closeButton.addEventListener("click",close);
+    overlay.addEventListener("click",function (event) {
+      if (event.target === overlay || event.target.closest("a[href]")) close();
+    });
+    document.addEventListener("keydown",function (event) {
+      if (overlay.hidden) return;
+      if (event.key === "Escape") {event.preventDefault();close();return;}
+      if (event.key !== "Tab") return;
+      const items = Array.from(sheet.querySelectorAll("a[href],button")).filter(function (el) {
+        return !el.disabled && el.getClientRects().length > 0;
+      });
+      const first = items[0], last = items[items.length-1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();first.focus();
+      }
+    });
+    window.addEventListener("resize",function () {
+      if (!smallScreen.matches) close();
+    });
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded",init,{once:true});
   else init();
 })();
