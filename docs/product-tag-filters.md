@@ -1,50 +1,74 @@
-# Filtri tag Arredo bagno — v1.0.3
+# Filtri tag Arredo bagno — v1.1.0
 
-Il componente riorganizza la tag cloud già presente su `/arredo-bagno`.
-Il blocco tag Squarespace deve rimanere nella pagina: è la sorgente dei link.
-Non esegue fetch, non legge le schede prodotto e non modifica il catalogo.
+Pannello compatto con checkbox e combinazioni di tag. Il componente riusa la
+cloud tag e le schede prodotto già presenti su `/arredo-bagno`; non esegue fetch,
+non legge le singole pagine prodotto e non modifica il catalogo.
 
 ## Collegamento Squarespace
 
-Inserire una sola volta in **Impostazioni → Avanzate → Iniezione codice → Footer**:
+Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione codice → Footer**:
 
 ```html
 <!-- Kerapho: filtri tag Arredo bagno -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.0.3">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.0.3"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.1.0">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.1.0"></script>
 ```
 
-Non copiare anche il contenuto dei file nel CSS personalizzato o in altri blocchi.
-Lo script interviene solo su `/arredo-bagno`, anche con parametri tag/category.
-Per gli aggiornamenti incrementare la versione di entrambi i collegamenti.
+Mantenere il blocco tag Squarespace nella pagina: fornisce le voci del pannello.
+Non duplicare i collegamenti. Dopo l'aggiornamento ricaricare con Ctrl+F5.
 
-## Comportamento
+## Design
 
-- Pannello inserito dentro `.Main.Main--products-list`, come primo elemento di
-  `.ProductList.products-collection-v2.sqs-pinterest-products-wrapper`, prima delle categorie e dei prodotti.
-- Larghezza del pannello pari al contenitore ProductList, senza margini laterali aggiuntivi.
-- Dopo un aggiornamento ricaricare completamente la pagina (Ctrl+F5) per reinizializzare lo script.
-- Pannello e gruppi inizialmente chiusi su desktop e mobile, anche con tag attivo.
-- Il blocco tag sorgente viene nascosto; mantenerlo nella pagina.
-- Se il contenitore prodotti non è disponibile, il blocco originale resta visibile.
-- Desktop: griglia a quattro colonne, due su schermi intermedi.
-- Mobile: pulsante Filtra prodotti e gruppi richiudibili.
-- Materiali, installazioni, sanitari, rubinetteria, marchi, colori e misure separati.
-- Misure ordinate numericamente; tag sconosciuti visibili in Altri filtri.
-- Filtro attivo evidenziato, con collegamento per rimuoverlo.
-- Destinazioni originali dei tag conservate: una selezione tag alla volta,
-  secondo il comportamento dei link esistenti. Non è un filtro multiplo.
-- Le categorie native non vengono modificate.
-- Il comando di rimozione elimina tag e paginazione dall'URL corrente,
-  mantenendo eventuali altri parametri, compresa la categoria.
-- Supporto a inserimento tardivo del blocco e navigazione Squarespace.
+- Pannello dentro `.ProductList.products-collection-v2.sqs-pinterest-products-wrapper`,
+  prima delle categorie e dei prodotti, allineato alla larghezza del catalogo.
+- Pannello e gruppi inizialmente chiusi.
+- Due colonne di gruppi su desktop, una su mobile.
+- Opzioni affiancate con larghezza naturale e ritorno a capo automatico.
+- Checkbox native, spaziatura compatta e area di tocco da 44 px su mobile.
+- Conteggio prodotti visibile anche con pannello chiuso; conteggio selezioni per gruppo.
+- Pulsante Azzera filtri e messaggio quando non ci sono corrispondenze.
 
-I raggruppamenti dipendono dai tag esistenti. La sezione non deduce materiali,
-dimensioni o disponibilità dalle varianti prodotto. I nomi di nuovi marchi
-si aggiungono alla mappa nello script; colori con prefisso Colore e misure
-numeriche vengono riconosciuti automaticamente.
+## Combinazioni
+
+Nello stesso gruppo le selezioni sono alternative (OR); tra gruppi sono
+condizioni combinate (AND).
+
+Esempio: Marchi = CIPI + VALDAMA e Materiale lavabo = Ceramica mostra i prodotti
+in ceramica di Cipì oppure Valdama. Azzera filtri rimuove tutte le selezioni e
+mantiene la categoria corrente.
+
+I filtri si applicano alle classi `tag-*` delle schede esistenti, mantenendone
+ordine, immagini, prezzi e collegamenti. Non deducono attributi dalle varianti.
+Un prodotto corrisponde solo ai tag effettivamente assegnati nel catalogo.
+
+Le selezioni sono salvate nel parametro URL `kf` (array JSON), ripristinate
+all'apertura di un link condiviso e propagate ai link di categoria/paginazione.
+Il parametro non richiede supporto lato Squarespace: il filtro viene applicato
+dallo script dopo il caricamento. Non è memoria permanente del browser.
+
+Se si parte da una pagina nativa `?tag=...`, al primo cambiamento si ricarica
+una volta la categoria/raccolta senza quel parametro, conservando le checkbox
+in `kf`. Questo evita di combinare i filtri su un catalogo già ristretto dal server.
+
+## Copertura e manutenzione
+
+Alla verifica del 21 ottobre 2026 la pagina principale contiene 151 schede
+prodotto e non presenta paginazione. Il filtro può quindi usare l'intero elenco
+attuale senza richieste aggiuntive.
+
+Se in futuro viene attivata la paginazione, il filtro agisce sui prodotti presenti
+nella pagina e il conteggio lo dichiara con “in questa pagina”. I link di
+paginazione conservano le selezioni. Non scarica in background le altre pagine.
+
+I gruppi dipendono dai tag presenti nella cloud. Colori con prefisso Colore e
+misure numeriche vengono classificati automaticamente; nuovi marchi vanno
+aggiunti alla mappa. Le altre voci compaiono in Altri filtri.
+
+Le classi tag devono seguire la convenzione Squarespace `tag-nome-del-tag`.
+Per tag nuovi con caratteri speciali verificare la corrispondenza con le classi
+prodotte dal template prima di pubblicarli.
 
 ## Rimozione
 
 Eliminare i due collegamenti dall'iniezione codice e ricaricare la pagina.
-La tag cloud originale torna visibile.
+La cloud originale torna visibile e le schede non sono più filtrate.
