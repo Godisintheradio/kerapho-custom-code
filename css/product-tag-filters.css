@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.1.0 */
+/* Kerapho — compact checkbox tag filters v1.2.0 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -156,4 +156,22 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .kf-panel .kf-option { transition: none; }
+}
+
+/* Categories are the first full-width group; the catalog uses the freed space. */
+.ProductList.products-collection-v2.kf-categories-integrated > .ProductList-filter--categories {
+  display: none !important;
+}
+.ProductList.products-collection-v2.kf-categories-integrated > .ProductList-grid {
+  clear: both;
+  float: none;
+  width: calc(100% + 10px);
+  box-sizing: border-box;
+  padding: 0;
+}
+.kf-panel .kf-group--categories {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid var(--kf-line);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
 }

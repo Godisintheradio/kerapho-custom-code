@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.1.0. No product requests. */
+/* Kerapho — compact checkbox tag filters, v1.2.0. No product requests. */
 (function () {
   "use strict";
-  const VERSION = "1.1.0";
+  const VERSION = "1.2.0";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -39,20 +39,24 @@
 
   const controllers = new Set();
   function slug(tag) {
-    return normalize(tag).normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    return normalize(tag)
       .replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
   }
   function readSelection(known) {
     const url = new URL(location.href);
-    let values = [];
-    try {
-      const parsed = JSON.parse(url.searchParams.get("kf") || "[]");
-      if (Array.isArray(parsed)) values = parsed;
-    } catch (_) { /* Ignore malformed shared filter URLs. */ }
+    const values = [];
+    for (const [parameter, prefix] of [["kf", ""], ["kc", "category:"]]) {
+      try {
+        const parsed = JSON.parse(url.searchParams.get(parameter) || "[]");
+        if (Array.isArray(parsed)) parsed.filter(value => typeof value === "string")
+          .forEach(value => values.push(prefix + normalize(value)));
+      } catch (_) { /* Ignore malformed shared filter URLs. */ }
+    }
     const nativeTag = url.searchParams.get("tag");
-    if (nativeTag) values.push(nativeTag);
-    return new Set(values.filter(tag => typeof tag === "string")
-      .map(normalize).filter(tag => known.has(tag)));
+    const nativeCategory = url.searchParams.get("category");
+    if (nativeTag) values.push(normalize(nativeTag));
+    if (nativeCategory) values.push("category:" + normalize(nativeCategory));
+    return new Set(values.filter(key => known.has(key)));
   }
 
   function mount() {
@@ -77,11 +81,24 @@
         if (!tag || known.has(normalize(tag))) return;
         const key = normalize(tag);
         const group = /^colore\s+/i.test(tag) ? 6 : dimensions.test(tag) ? 7 : (mapping.get(key) ?? 8);
-        const entry = { tag, key, group, className: "tag-" + slug(tag) };
+        const entry = { tag, key, group, kind: "tag", className: "tag-" + slug(tag) };
         known.set(key, entry);
         buckets[group].push(entry);
       });
       if (!known.size) continue;
+      const categoryItems = [];
+      target.querySelectorAll(".ProductList-filter--categories a[href]").forEach(link => {
+        let url;
+        try { url = new URL(link.getAttribute("href"), location.origin); } catch (_) { return; }
+        if (url.origin !== location.origin || url.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
+        const tag = url.searchParams.get("category");
+        if (!tag) return;
+        const key = "category:" + normalize(tag);
+        if (known.has(key)) return;
+        const entry = { tag, key, group: "category", kind: "category", className: "category-" + slug(tag) };
+        known.set(key, entry);
+        categoryItems.push(entry);
+      });
       let selected = readSelection(known);
       const panel = element("details", "kf-panel");
       panel.dataset.category = new URL(location.href).searchParams.get("category") || "";
@@ -93,11 +110,11 @@
       const body = element("div", "kf-body");
       const grid = element("div", "kf-grid");
       const inputs = [];
-      groups.forEach(([name], index) => {
-        const items = buckets[index];
+      const sections = [["Categorie", categoryItems], ...groups.map(([name], index) => [name, buckets[index]])];
+      sections.forEach(([name, items], index) => {
         if (!items.length) return;
         items.sort((a, b) => collator.compare(a.tag, b.tag));
-        const section = element("details", "kf-group");
+        const section = element("details", name === "Categorie" ? "kf-group kf-group--categories" : "kf-group");
         const summary = element("summary", "kf-group-heading", name);
         const badge = element("span", "kf-group-count");
         summary.append(badge, element("span", "kf-chevron"));
@@ -133,12 +150,21 @@
       productGrid.append(empty);
       const originalLinks = new Map();
 
+      function selectedValues(kind) {
+        return [...selected].map(key => known.get(key)).filter(entry => entry?.kind === kind).map(entry => entry.tag);
+      }
+      function writeSelection(url) {
+        for (const [parameter, kind] of [["kf", "tag"], ["kc", "category"]]) {
+          const values = selectedValues(kind);
+          if (values.length) url.searchParams.set(parameter, JSON.stringify(values));
+          else url.searchParams.delete(parameter);
+        }
+      }
       function updateLinks() {
-        target.querySelectorAll(".ProductList-filter a[href], .ProductList-pagination a[href]").forEach(link => {
+        target.querySelectorAll(".ProductList-pagination a[href]").forEach(link => {
           if (!originalLinks.has(link)) originalLinks.set(link, link.getAttribute("href"));
           const url = new URL(originalLinks.get(link), location.origin);
-          if (selected.size) url.searchParams.set("kf", JSON.stringify([...selected].map(key => known.get(key).tag)));
-          else url.searchParams.delete("kf");
+          writeSelection(url);
           link.href = url.href;
         });
       }
@@ -172,12 +198,12 @@
       }
       function commitSelection() {
         const url = new URL(location.href);
-        const nativeFiltered = url.searchParams.has("tag");
+        const nativeFiltered = url.searchParams.has("tag") || url.searchParams.has("category");
         url.searchParams.delete("tag");
-        if (selected.size) url.searchParams.set("kf", JSON.stringify([...selected].map(key => known.get(key).tag)));
-        else url.searchParams.delete("kf");
-        // A native tag page contains only a subset: reload the category/base page
-        // once so OR selections can include products outside that original tag.
+        url.searchParams.delete("category");
+        writeSelection(url);
+        // Native category/tag pages contain a subset: reload the base collection
+        // once so checkbox OR selections can use all matching segments.
         if (nativeFiltered) {
           url.searchParams.delete("page");
           url.searchParams.delete("offset");
@@ -199,6 +225,7 @@
       function cleanup() {
         productGrid.querySelectorAll(".kf-hidden").forEach(card => card.classList.remove("kf-hidden"));
         originalLinks.forEach((href, link) => { if (link.isConnected) link.setAttribute("href", href); });
+        target.classList.remove("kf-categories-integrated");
         empty.remove();
         panel.remove();
         source.classList.remove("kf-source");
@@ -211,6 +238,7 @@
       panel._kfCleanup = cleanup;
       controllers.add(cleanup);
       target.prepend(panel);
+      if (categoryItems.length) target.classList.add("kf-categories-integrated");
       source.classList.add("kf-source");
       source.closest(".sqs-block-tagcloud")?.classList.add("kf-source-block");
       apply();
