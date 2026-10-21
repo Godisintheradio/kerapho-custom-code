@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.2.0 */
+/* Kerapho — compact checkbox tag filters v1.2.1 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -174,4 +174,46 @@
   border-bottom: 1px solid var(--kf-line);
   padding-bottom: 8px;
   margin-bottom: 4px;
+}
+
+/* Desktop: filter sidebar on the left, product cards on the right. */
+@media (min-width: 1024px) {
+  .Main.Main--products-list .ProductList.products-collection-v2.kf-categories-integrated {
+    display: grid;
+    grid-template-columns: clamp(240px, 20vw, 300px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .Main.Main--products-list .ProductList.products-collection-v2.kf-categories-integrated > .kf-panel {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .ProductList.products-collection-v2.kf-categories-integrated > .ProductList-grid {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .ProductList.products-collection-v2.kf-categories-integrated > .ProductList-pagination {
+    grid-column: 2;
+  }
+  .ProductList.kf-categories-integrated > .kf-panel .kf-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .ProductList.kf-categories-integrated > .kf-panel .kf-heading {
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 13px 14px;
+  }
+  .ProductList.kf-categories-integrated > .kf-panel .kf-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .ProductList.kf-categories-integrated > .kf-panel .kf-group + .kf-group {
+    border-top: 1px solid var(--kf-line);
+  }
+  .ProductList.kf-categories-integrated > .kf-panel .kf-group--categories {
+    border-bottom: 0;
+  }
 }
