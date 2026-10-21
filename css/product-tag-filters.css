@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.2.2 */
+/* Kerapho — compact checkbox tag filters v1.2.3 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -188,4 +188,54 @@
 }
 @media (max-width: 767px) {
   .ProductList-filter.ProductList-filter--categories.kf-filter-host { padding: 0; }
+}
+
+/* Compact visible cards in rows: native nth-child/float rules count hidden cards. */
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid {
+  --kf-columns: 4;
+  --kf-medium-columns: 3;
+  --kf-small-columns: 2;
+  display: grid;
+  grid-template-columns: repeat(var(--kf-columns), minmax(0, 1fr));
+  column-gap: 10px;
+  row-gap: 30px;
+  align-items: start;
+}
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid[data-items-per-row="1"] {
+  --kf-columns: 1;
+  --kf-medium-columns: 1;
+  --kf-small-columns: 1;
+}
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid[data-items-per-row="2"] {
+  --kf-columns: 2;
+  --kf-medium-columns: 2;
+}
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid[data-items-per-row="3"] { --kf-columns: 3; }
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid[data-items-per-row="5"] { --kf-columns: 5; }
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid::before,
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid::after {
+  display: none;
+}
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid > .ProductList-item {
+  float: none !important;
+  clear: none !important;
+  width: auto !important;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 !important;
+  box-sizing: border-box;
+}
+.ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid > .kf-empty {
+  grid-column: 1 / -1;
+}
+.tweak-product-list-meta-position-overlay .ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid { row-gap: 10px; }
+@media (max-width: 960px) {
+  .ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid {
+    grid-template-columns: repeat(var(--kf-medium-columns), minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .ProductList.products-collection-v2 > .ProductList-grid.kf-product-grid {
+    grid-template-columns: repeat(var(--kf-small-columns), minmax(0, 1fr));
+  }
 }

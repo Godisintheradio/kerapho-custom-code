@@ -1,4 +1,4 @@
-# Filtri tag Arredo bagno — v1.2.2
+# Filtri tag Arredo bagno — v1.2.3
 
 Pannello compatto con checkbox e combinazioni di categorie e tag. Il componente riusa la
 cloud tag e le schede prodotto già presenti su `/arredo-bagno`; non esegue fetch,
@@ -10,8 +10,8 @@ Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione cod
 
 ```html
 <!-- Kerapho: filtri tag Arredo bagno -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.2.2">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.2.2"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.2.3">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.2.3"></script>
 ```
 
 Mantenere il blocco tag Squarespace nella pagina: fornisce le voci del pannello.
@@ -22,7 +22,10 @@ Non duplicare i collegamenti. Dopo l'aggiornamento ricaricare con Ctrl+F5.
 - Pannello inserito dentro `.ProductList-filter.ProductList-filter--categories`.
 - Il contenitore nativo resta nella sua posizione e mantiene la larghezza
   stabilita dal template; vengono nascosti solo i controlli originali al suo interno.
-- La griglia prodotti mantiene il layout e le dimensioni native.
+- Il contenitore della griglia mantiene la larghezza nativa. Le schede usano
+  CSS Grid per ricompattare i risultati visibili, senza float o clear basati
+  sulla posizione originale nel DOM. Il numero di colonne segue
+  `data-items-per-row` e i breakpoint del template (960 e 640 px).
 - Da 768 px pannello aperto; Categorie aperte su tutti gli schermi.
 - Gli altri gruppi partono chiusi. Su mobile il pannello parte chiuso;
   aprendolo, le categorie sono già espanse.
@@ -85,3 +88,19 @@ prodotte dal template prima di pubblicarli.
 
 Eliminare i due collegamenti dall'iniezione codice e ricaricare la pagina.
 La cloud originale torna visibile e le schede non sono più filtrate.
+
+## Correzione griglia v1.2.3
+
+Il template usa float e `nth-child` per iniziare le righe. I prodotti esclusi
+dal filtro rimangono nel DOM con display none, quindi le vecchie regole
+continuano a contare anche le schede nascoste. Il risultato sono righe vuote
+o parziali e allineamenti irregolari.
+
+La classe `kf-product-grid` viene applicata soltanto alla griglia gestita dal
+filtro. Su questa griglia CSS Grid dispone le sole schede visibili, annullando
+float, clear, larghezze percentuali e margini delle singole schede. Mantiene
+10 px tra colonne e 30 px tra righe. Le altre raccolte restano invariate.
+
+Nel CSS allegato sono inoltre presenti due dichiarazioni di padding della
+ProductList-grid (una globale e una desktop). Non sono la causa del conteggio
+nth-child: non occorre modificarle per applicare questa correzione.

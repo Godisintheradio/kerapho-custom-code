@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.2.2. No product requests. */
+/* Kerapho — compact checkbox tag filters, v1.2.3. No product requests. */
 (function () {
   "use strict";
-  const VERSION = "1.2.2";
+  const VERSION = "1.2.3";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -229,6 +229,7 @@
         productGrid.querySelectorAll(".kf-hidden").forEach(card => card.classList.remove("kf-hidden"));
         originalLinks.forEach((href, link) => { if (link.isConnected) link.setAttribute("href", href); });
         host.classList.remove("kf-filter-host");
+        productGrid.classList.remove("kf-product-grid");
         empty.remove();
         panel.remove();
         source.classList.remove("kf-source");
@@ -240,6 +241,7 @@
       if (previous?.isConnected) previous.remove();
       panel._kfCleanup = cleanup;
       controllers.add(cleanup);
+      productGrid.classList.add("kf-product-grid");
       host.append(panel);
       host.classList.add("kf-filter-host");
       source.classList.add("kf-source");
