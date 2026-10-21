@@ -1,18 +1,29 @@
-/* Kerapho — compact checkbox tag filters v1.2.1 */
+/* Kerapho — compact checkbox tag filters v1.2.2 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
 .ProductList .kf-empty[hidden] { display: none !important; }
-.Main.Main--products-list .ProductList.products-collection-v2 > .kf-panel {
-  box-sizing: border-box;
+/* Use the native category navigation slot and its existing column width. */
+.ProductList-filter.ProductList-filter--categories.kf-filter-host > :not(.kf-panel) {
+  display: none !important;
+}
+.ProductList-filter.ProductList-filter--categories.kf-filter-host {
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0 13px 0 0;
+}
+.ProductList-filter.ProductList-filter--categories.kf-filter-host > .kf-panel {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  margin: 0 0 20px;
-  float: none;
-  clear: both;
-  grid-column: 1 / -1;
-  flex-basis: 100%;
+  margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
 }
 .kf-panel {
   --kf-ink: #252525;
@@ -158,62 +169,23 @@
   .kf-panel .kf-option { transition: none; }
 }
 
-/* Categories are the first full-width group; the catalog uses the freed space. */
-.ProductList.products-collection-v2.kf-categories-integrated > .ProductList-filter--categories {
-  display: none !important;
+/* One column of groups inside the native filter slot. */
+.kf-filter-host .kf-panel .kf-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
-.ProductList.products-collection-v2.kf-categories-integrated > .ProductList-grid {
-  clear: both;
-  float: none;
-  width: calc(100% + 10px);
-  box-sizing: border-box;
-  padding: 0;
+.kf-filter-host .kf-panel .kf-heading {
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 13px 14px;
 }
-.kf-panel .kf-group--categories {
-  grid-column: 1 / -1;
-  border-bottom: 1px solid var(--kf-line);
-  padding-bottom: 8px;
-  margin-bottom: 4px;
+.kf-filter-host .kf-panel .kf-body {
+  padding-left: 14px;
+  padding-right: 14px;
 }
-
-/* Desktop: filter sidebar on the left, product cards on the right. */
-@media (min-width: 1024px) {
-  .Main.Main--products-list .ProductList.products-collection-v2.kf-categories-integrated {
-    display: grid;
-    grid-template-columns: clamp(240px, 20vw, 300px) minmax(0, 1fr);
-    gap: 24px;
-    align-items: start;
-  }
-  .Main.Main--products-list .ProductList.products-collection-v2.kf-categories-integrated > .kf-panel {
-    grid-column: 1;
-    grid-row: 1;
-    margin: 0;
-  }
-  .ProductList.products-collection-v2.kf-categories-integrated > .ProductList-grid {
-    grid-column: 2;
-    grid-row: 1;
-    min-width: 0;
-  }
-  .ProductList.products-collection-v2.kf-categories-integrated > .ProductList-pagination {
-    grid-column: 2;
-  }
-  .ProductList.kf-categories-integrated > .kf-panel .kf-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0;
-  }
-  .ProductList.kf-categories-integrated > .kf-panel .kf-heading {
-    flex-wrap: wrap;
-    gap: 4px 10px;
-    padding: 13px 14px;
-  }
-  .ProductList.kf-categories-integrated > .kf-panel .kf-body {
-    padding-left: 14px;
-    padding-right: 14px;
-  }
-  .ProductList.kf-categories-integrated > .kf-panel .kf-group + .kf-group {
-    border-top: 1px solid var(--kf-line);
-  }
-  .ProductList.kf-categories-integrated > .kf-panel .kf-group--categories {
-    border-bottom: 0;
-  }
+.kf-filter-host .kf-panel .kf-group + .kf-group {
+  border-top: 1px solid var(--kf-line);
+}
+@media (max-width: 767px) {
+  .ProductList-filter.ProductList-filter--categories.kf-filter-host { padding: 0; }
 }

@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.2.1. No product requests. */
+/* Kerapho — compact checkbox tag filters, v1.2.2. No product requests. */
 (function () {
   "use strict";
-  const VERSION = "1.2.1";
+  const VERSION = "1.2.2";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -65,7 +65,9 @@
     const target = document.querySelector(".Main.Main--products-list .ProductList.products-collection-v2.sqs-pinterest-products-wrapper");
     const productGrid = target?.querySelector(".ProductList-grid");
     if (!target || !productGrid) return;
-    const previous = target.querySelector(":scope > .kf-panel");
+    const host = target.querySelector(".ProductList-filter.ProductList-filter--categories");
+    if (!host) return;
+    const previous = host.querySelector(":scope > .kf-panel");
     for (const source of document.querySelectorAll(".sqs-tagcloud")) {
       if (previous?._kfUpdate && previous._keraphoSource === source && previous.dataset.category === (new URL(location.href).searchParams.get("category") || "")) {
         previous._kfUpdate?.();
@@ -103,7 +105,7 @@
       const panel = element("details", "kf-panel");
       panel.dataset.category = new URL(location.href).searchParams.get("category") || "";
       panel._keraphoSource = source;
-      panel.open = window.matchMedia("(min-width: 1024px)").matches;
+      panel.open = window.matchMedia("(min-width: 768px)").matches;
       const heading = element("summary", "kf-heading");
       const counter = element("span", "kf-hint");
       heading.append(element("span", "kf-title", "Filtra prodotti"), counter, element("span", "kf-chevron"));
@@ -226,7 +228,7 @@
       function cleanup() {
         productGrid.querySelectorAll(".kf-hidden").forEach(card => card.classList.remove("kf-hidden"));
         originalLinks.forEach((href, link) => { if (link.isConnected) link.setAttribute("href", href); });
-        target.classList.remove("kf-categories-integrated");
+        host.classList.remove("kf-filter-host");
         empty.remove();
         panel.remove();
         source.classList.remove("kf-source");
@@ -238,8 +240,8 @@
       if (previous?.isConnected) previous.remove();
       panel._kfCleanup = cleanup;
       controllers.add(cleanup);
-      target.prepend(panel);
-      if (categoryItems.length) target.classList.add("kf-categories-integrated");
+      host.append(panel);
+      host.classList.add("kf-filter-host");
       source.classList.add("kf-source");
       source.closest(".sqs-block-tagcloud")?.classList.add("kf-source-block");
       apply();
