@@ -1,4 +1,4 @@
-/* Kerapho — grouped native tag links, v1.0.2. No product requests. */
+/* Kerapho — grouped native tag links, v1.0.3. No product requests. */
 (function () {
   "use strict";
   if (window.KeraphoTagFilters) {
@@ -126,7 +126,7 @@
       mount();
     });
   }
-  window.KeraphoTagFilters = { refresh, version: "1.0.2" };
+  window.KeraphoTagFilters = { refresh, version: "1.0.3" };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true });
   else refresh();
   window.addEventListener("mercury:load", refresh);

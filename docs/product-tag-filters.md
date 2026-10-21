@@ -1,4 +1,4 @@
-# Filtri tag Arredo bagno — v1.0.2
+# Filtri tag Arredo bagno — v1.0.3
 
 Il componente riorganizza la tag cloud già presente su `/arredo-bagno`.
 Il blocco tag Squarespace deve rimanere nella pagina: è la sorgente dei link.
@@ -10,8 +10,8 @@ Inserire una sola volta in **Impostazioni → Avanzate → Iniezione codice → 
 
 ```html
 <!-- Kerapho: filtri tag Arredo bagno -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.0.2">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.0.2"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.0.3">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.0.3"></script>
 ```
 
 Non copiare anche il contenuto dei file nel CSS personalizzato o in altri blocchi.
@@ -22,6 +22,8 @@ Per gli aggiornamenti incrementare la versione di entrambi i collegamenti.
 
 - Pannello inserito dentro `.Main.Main--products-list`, come primo elemento di
   `.ProductList.products-collection-v2.sqs-pinterest-products-wrapper`, prima delle categorie e dei prodotti.
+- Larghezza del pannello pari al contenitore ProductList, senza margini laterali aggiuntivi.
+- Dopo un aggiornamento ricaricare completamente la pagina (Ctrl+F5) per reinizializzare lo script.
 - Pannello e gruppi inizialmente chiusi su desktop e mobile, anche con tag attivo.
 - Il blocco tag sorgente viene nascosto; mantenerlo nella pagina.
 - Se il contenitore prodotti non è disponibile, il blocco originale resta visibile.
