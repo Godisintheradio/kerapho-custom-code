@@ -1,5 +1,12 @@
-/* Kerapho — product tag filters v1.0.0 */
+/* Kerapho — product tag filters v1.0.1 */
 .sqs-tagcloud.kf-source { display: none !important; }
+.sqs-block-tagcloud.kf-source-block { display: none !important; }
+.Main.Main--products-list > .kf-panel {
+  margin: 0 0 24px;
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  clear: both;
+}
 .kf-panel {
   --kf-ink: #252525;
   --kf-muted: #686868;

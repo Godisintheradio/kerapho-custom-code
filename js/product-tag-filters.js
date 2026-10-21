@@ -1,4 +1,4 @@
-/* Kerapho — grouped native tag links, v1.0.0. No product requests. */
+/* Kerapho — grouped native tag links, v1.0.1. No product requests. */
 (function () {
   "use strict";
   if (window.KeraphoTagFilters) {
@@ -40,11 +40,12 @@
     if (location.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
     const current = new URL(location.href);
     const active = normalize(current.searchParams.get("tag") || "");
-    const desktop = window.matchMedia("(min-width: 768px)").matches;
+    const target = document.querySelector(".Main.Main--products-list");
+    if (!target) return;
+    const previous = target.querySelector(":scope > .kf-panel");
 
-    document.querySelectorAll(".sqs-tagcloud").forEach(source => {
-      const previous = source.nextElementSibling;
-      if (previous?.classList.contains("kf-panel") && previous.dataset.url === current.href) return;
+    for (const source of document.querySelectorAll(".sqs-tagcloud")) {
+      if (previous && previous.dataset.url === current.href && previous._keraphoSource === source) return;
       const buckets = groups.map(() => []);
       const seen = new Set();
       source.querySelectorAll("a[href]").forEach(link => {
@@ -59,11 +60,12 @@
         // Keep Squarespace's original destination: one native tag per navigation.
         buckets[index].push({ tag, href: url.href, selected: key === active });
       });
-      if (!seen.size) return;
+      if (!seen.size) continue;
 
       const panel = element("details", "kf-panel");
       panel.dataset.url = current.href;
-      panel.open = desktop || Boolean(active);
+      panel._keraphoSource = source;
+      panel.open = false;
       const heading = element("summary", "kf-heading");
       const title = element("span", "kf-title", "Filtra prodotti");
       heading.append(title, element("span", "kf-hint", "Affina la tua ricerca"), element("span", "kf-chevron"));
@@ -89,7 +91,7 @@
         if (!items.length) return;
         items.sort((a, b) => collator.compare(a.tag, b.tag));
         const section = element("details", "kf-group");
-        section.open = desktop || items.some(item => item.selected);
+        section.open = false;
         const summary = element("summary", "kf-group-heading", name);
         summary.append(element("span", "kf-chevron"));
         const list = element("ul", "kf-list");
@@ -106,11 +108,13 @@
       });
       body.append(grid);
       panel.append(body);
-      if (previous?.classList.contains("kf-panel")) previous.remove();
-      source.after(panel);
+      if (previous) previous.remove();
+      target.prepend(panel);
       // The stylesheet hides the source only after the replacement exists.
       source.classList.add("kf-source");
-    });
+      source.closest(".sqs-block-tagcloud")?.classList.add("kf-source-block");
+      break;
+    }
   }
 
   let queued = false;
@@ -122,7 +126,7 @@
       mount();
     });
   }
-  window.KeraphoTagFilters = { refresh, version: "1.0.0" };
+  window.KeraphoTagFilters = { refresh, version: "1.0.1" };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true });
   else refresh();
   window.addEventListener("mercury:load", refresh);
@@ -131,7 +135,8 @@
   const observer = new MutationObserver(records => {
     if (records.some(record => [...record.addedNodes].some(node => node.nodeType === 1 &&
       !node.matches(".kf-panel, .kf-panel *") &&
-      (node.matches(".sqs-tagcloud, .sqs-tagcloud a") || node.querySelector(".sqs-tagcloud"))))) refresh();
+      (node.matches(".sqs-tagcloud, .sqs-tagcloud a, .Main.Main--products-list") ||
+        node.querySelector(".sqs-tagcloud, .Main.Main--products-list"))))) refresh();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
