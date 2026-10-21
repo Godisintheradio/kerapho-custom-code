@@ -1,10 +1,10 @@
-/* KERAPHO mobile navigation v4 — H3 groups from /mega-menu.
+/* KERAPHO mobile navigation v5 — H3 groups from /mega-menu.
  * Independent mobile drawer; preserve desktop mega-menu.js.
  */
 (function () {
   "use strict";
-  if (window.__keraphoMobileMenuV4) return;
-  window.__keraphoMobileMenuV4 = true;
+  if (window.__keraphoMobileMenuV5) return;
+  window.__keraphoMobileMenuV5 = true;
   const smallScreen = window.matchMedia("(max-width: 1024px)");
 
   function safeLink(source) {
@@ -42,6 +42,54 @@
     return groups;
   }
 
+
+  // Read native mobile navigation locally: no additional network requests.
+  function originalGroups(productGroups) {
+    const seen = new Set();
+    function key(link) {
+      const url = new URL(link.href, location.origin);
+      url.pathname = url.pathname.replace(/\/+$/, "") || "/";
+      url.searchParams.sort();
+      return url.href;
+    }
+    productGroups.forEach(function (group) {
+      if (group.link) seen.add(key(group.link));
+      group.links.forEach(function (link) {seen.add(key(link));});
+    });
+    function unique(source) {
+      const link = safeLink(source);
+      if (!link) return null;
+      const url = new URL(link.href, location.origin);
+      if (url.origin === location.origin && url.pathname.replace(/\/+$/, "") === "/mega-menu") return null;
+      const id = key(link);
+      if (seen.has(id)) return null;
+      seen.add(id);
+      return link;
+    }
+    const groups = [];
+    const folderKeys = new Set();
+    const folders = Array.from(document.querySelectorAll(".Mobile-overlay-folder[data-controller-folder]"));
+    document.querySelectorAll(".Mobile-overlay-nav > .Mobile-overlay-nav-item").forEach(function (item) {
+      const folderKey = item.getAttribute("data-controller-folder-toggle");
+      if (folderKey !== null) {
+        if (folderKeys.has(folderKey)) return;
+        folderKeys.add(folderKey);
+        const folder = folders.find(function (el) {
+          return el.getAttribute("data-controller-folder") === folderKey;
+        });
+        if (!folder) return;
+        const links = Array.from(folder.querySelectorAll("a.Mobile-overlay-folder-item[href]"))
+          .map(unique).filter(Boolean);
+        const title = item.textContent.trim();
+        if (title && links.length) groups.push({title:title,link:null,links:links,original:true});
+      } else if (item.tagName === "A") {
+        const link = unique(item);
+        if (link) groups.push({title:link.textContent,link:link,links:[],original:true});
+      }
+    });
+    return groups;
+  }
+
   function styles() {
     if (document.getElementById("kerapho-mobile-accordion-style")) return;
     const style = document.createElement("style");
@@ -50,6 +98,7 @@
 #kerapho-mobile-accordion{width:100%;box-sizing:border-box;text-align:left;color:#111;background:#fff;margin:10px 0 22px}
 #kerapho-mobile-accordion *{box-sizing:border-box}
 #kerapho-mobile-accordion .km-group{border-bottom:1px solid #e9e9e9}
+#kerapho-mobile-accordion .km-original-start{margin-top:20px;border-top:2px solid #eee;padding-top:8px}
 #kerapho-mobile-accordion .km-row{display:flex;align-items:center;min-height:56px;gap:8px}
 #kerapho-mobile-accordion a{color:#111!important;text-decoration:none!important;border:0!important;background-image:none!important;overflow-wrap:anywhere}
 #kerapho-mobile-accordion .km-title{display:block;flex:1;min-width:0;margin:0;padding:16px 4px;font-family:inherit;font-size:17px;font-weight:600;line-height:1.35}
@@ -68,10 +117,15 @@
   function build(groups) {
     const root = document.createElement("nav");
     root.id = "kerapho-mobile-accordion";
-    root.setAttribute("aria-label", "Categorie prodotti");
+    root.setAttribute("aria-label", "Navigazione Kerapho");
+    let originalStarted = false;
     groups.forEach(function (data, index) {
       const group = document.createElement("div");
       group.className = "km-group";
+      if (data.original && !originalStarted) {
+        group.classList.add("km-original-start");
+        originalStarted = true;
+      }
       const row = document.createElement("div");
       row.className = "km-row";
       const list = document.createElement("ul");
@@ -253,7 +307,7 @@
           if (!content) throw new Error("Pagina sorgente non trovata");
           const groups = extract(content);
           if (!groups.length) throw new Error("Nessun H3 riconosciuto");
-          body.replaceChildren(build(groups));
+          body.replaceChildren(build(groups.concat(originalGroups(groups))));
           ready = true;
         })
         .catch(function (error) {
