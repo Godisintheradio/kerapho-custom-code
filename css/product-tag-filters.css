@@ -1,7 +1,10 @@
-/* Kerapho — product tag filters v1.0.1 */
+/* Kerapho — product tag filters v1.0.2 */
 .sqs-tagcloud.kf-source { display: none !important; }
 .sqs-block-tagcloud.kf-source-block { display: none !important; }
-.Main.Main--products-list > .kf-panel {
+.ProductList.products-collection-v2 > .kf-panel {
+  float: none;
+  min-width: 0;
+  max-width: 100%;
   margin: 0 0 24px;
   grid-column: 1 / -1;
   flex-basis: 100%;

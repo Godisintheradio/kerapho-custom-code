@@ -1,4 +1,4 @@
-/* Kerapho — grouped native tag links, v1.0.1. No product requests. */
+/* Kerapho — grouped native tag links, v1.0.2. No product requests. */
 (function () {
   "use strict";
   if (window.KeraphoTagFilters) {
@@ -40,7 +40,7 @@
     if (location.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
     const current = new URL(location.href);
     const active = normalize(current.searchParams.get("tag") || "");
-    const target = document.querySelector(".Main.Main--products-list");
+    const target = document.querySelector(".Main.Main--products-list .ProductList.products-collection-v2.sqs-pinterest-products-wrapper");
     if (!target) return;
     const previous = target.querySelector(":scope > .kf-panel");
 
@@ -126,7 +126,7 @@
       mount();
     });
   }
-  window.KeraphoTagFilters = { refresh, version: "1.0.1" };
+  window.KeraphoTagFilters = { refresh, version: "1.0.2" };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true });
   else refresh();
   window.addEventListener("mercury:load", refresh);
@@ -135,8 +135,8 @@
   const observer = new MutationObserver(records => {
     if (records.some(record => [...record.addedNodes].some(node => node.nodeType === 1 &&
       !node.matches(".kf-panel, .kf-panel *") &&
-      (node.matches(".sqs-tagcloud, .sqs-tagcloud a, .Main.Main--products-list") ||
-        node.querySelector(".sqs-tagcloud, .Main.Main--products-list"))))) refresh();
+      (node.matches(".sqs-tagcloud, .sqs-tagcloud a, .Main.Main--products-list, .ProductList.products-collection-v2") ||
+        node.querySelector(".sqs-tagcloud, .Main.Main--products-list, .ProductList.products-collection-v2"))))) refresh();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 })();
