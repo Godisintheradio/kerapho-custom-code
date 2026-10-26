@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.3.0. Uses native tag blocks; no network requests. */
+/* Kerapho — compact checkbox tag filters, v1.3.1. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.3.0";
+  const VERSION = "1.3.1";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -109,7 +109,7 @@
       const panel = element("details", "kf-panel");
       panel.dataset.category = new URL(location.href).searchParams.get("category") || "";
       panel._keraphoSource = source;
-      panel.open = window.matchMedia("(min-width: 768px)").matches;
+      panel.open = true;
       const heading = element("summary", "kf-heading");
       const counter = element("span", "kf-hint");
       heading.append(element("span", "kf-title", "Filtra prodotti"), counter, element("span", "kf-chevron"));
@@ -121,7 +121,7 @@
         if (!items.length) return;
         items.sort((a, b) => collator.compare(a.tag, b.tag));
         const section = element("details", name === "Categorie" ? "kf-group kf-group--categories" : "kf-group");
-        section.open = name === "Categorie";
+        section.open = true;
         const summary = element("summary", "kf-group-heading", name);
         const badge = element("span", "kf-group-count");
         summary.append(badge, element("span", "kf-chevron"));
