@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.3.3 */
+/* Kerapho — compact checkbox tag filters v1.4.0 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -260,3 +260,7 @@
     grid-template-columns: repeat(var(--kf-small-columns), minmax(0, 1fr));
   }
 }
+
+/* Hide options and groups that do not occur in the selected categories. */
+.kf-panel .kf-item[hidden],
+.kf-panel .kf-group[hidden] { display: none !important; }
