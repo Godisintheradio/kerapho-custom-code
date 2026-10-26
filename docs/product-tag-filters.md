@@ -1,4 +1,4 @@
-# Filtri prodotti globali — v1.4.1
+# Filtri prodotti globali — v1.5.0
 
 Pannello compatto con checkbox e combinazioni di categorie e tag. Il componente riusa la
 cloud tag e le schede prodotto già presenti nelle pagine elenco prodotti; non esegue fetch,
@@ -10,8 +10,8 @@ Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione cod
 
 ```html
 <!-- Kerapho: filtri prodotti globali -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.4.1">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.4.1"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.5.0">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.5.0"></script>
 ```
 
 Mantenere un blocco tag Squarespace collegato alla raccolta corrente in ogni pagina elenco: fornisce le voci del pannello. Senza un blocco corrispondente il componente lascia intatta la navigazione nativa.
@@ -106,10 +106,14 @@ Nel CSS allegato sono inoltre presenti due dichiarazioni di padding della
 ProductList-grid (una globale e una desktop). Non sono la causa del conteggio
 nth-child: non occorre modificarle per applicare questa correzione.
 
-## Estensione globale v1.4.1
+## Estensione globale v1.5.0
 
 Il componente individua la raccolta dai collegamenti della navigazione categorie e usa esclusivamente la cloud tag collegata allo stesso percorso. Non esegue richieste di rete, nemmeno quando il blocco tag manca. Schede prodotto e altre pagine sono escluse. I marchi ceramici presenti nello Shop sono inclusi nella mappa; i tag non classificati restano disponibili in Altri filtri.
 
-## Tag pertinenti alle categorie — v1.4.1
+## Tag pertinenti alle categorie — v1.5.0
 
-Se vengono selezionate categorie, il pannello mostra solo i tag presenti nelle schede appartenenti ad almeno una categoria selezionata. I gruppi senza opzioni vengono nascosti. La scelta di un tag non riduce le altre opzioni: la disponibilità dipende solo dalle categorie. Senza categorie selezionate vengono ripristinati tutti i tag della cloud. Cambiando categorie, i tag selezionati non più pertinenti vengono rimossi anche da URL e conteggi. Su pagine native filtrate, la pulizia delle selezioni avviene solo dopo il ritorno alla raccolta base, per evitare di dedurre la disponibilità da un sottoinsieme ristretto. Con paginazione, la disponibilità riflette le sole schede caricate nella pagina. Nessuna richiesta aggiuntiva.
+Se vengono selezionate categorie, il pannello mostra solo i tag presenti nelle schede appartenenti ad almeno una categoria selezionata. I gruppi senza opzioni vengono nascosti. Dalla v1.5.0 anche i tag selezionati aggiornano gli altri pannelli, come descritto sotto. Senza categorie selezionate vengono ripristinati tutti i tag della cloud. Cambiando categorie, i tag selezionati non più pertinenti vengono rimossi anche da URL e conteggi. Su pagine native filtrate, la pulizia delle selezioni avviene solo dopo il ritorno alla raccolta base, per evitare di dedurre la disponibilità da un sottoinsieme ristretto. Con paginazione, la disponibilità riflette le sole schede caricate nella pagina. Nessuna richiesta aggiuntiva.
+
+## Pannelli pertinenti alle selezioni — v1.5.0
+
+Anche marchi, colori, misure e altri tag aggiornano le opzioni degli altri pannelli. Ogni gruppo considera le selezioni degli altri gruppi, escludendo le proprie per permettere di aggiungere alternative OR. Le categorie restano tutte selezionabili. I tag selezionati rimangono visibili anche se non producono risultati, così possono essere rimossi. Cambiare categoria continua a rimuovere i tag non presenti nelle categorie scelte. I gruppi senza opzioni pertinenti e senza selezioni vengono nascosti. Azzerando i filtri tornano tutte le opzioni della cloud. Il calcolo usa solo le schede caricate e non esegue richieste aggiuntive.
