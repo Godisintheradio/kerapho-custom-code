@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.5.0. Uses native tag blocks; no network requests. */
+/* Kerapho — compact checkbox tag filters, v1.5.1. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.5.0";
+  const VERSION = "1.5.1";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
