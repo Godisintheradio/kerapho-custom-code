@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.4.1. Uses native tag blocks; no network requests. */
+/* Kerapho — compact checkbox tag filters, v1.5.0. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.4.1";
+  const VERSION = "1.5.0";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -199,6 +199,32 @@
         });
         return removed;
       }
+      function updateContextualTags(cards, activeGroups) {
+        const availableByGroup = new Map();
+        known.forEach(entry => {
+          if (entry.kind !== "tag" || availableByGroup.has(entry.group)) return;
+          const available = new Set();
+          cards.forEach(card => {
+            const matchesOthers = [...activeGroups].every(([group, names]) =>
+              group === entry.group || names.some(name => card.classList.contains(name)));
+            if (matchesOthers) card.classList.forEach(name => {
+              if (name.startsWith("tag-")) available.add(name);
+            });
+          });
+          availableByGroup.set(entry.group, available);
+        });
+        inputs.forEach(input => {
+          const entry = known.get(input.value);
+          if (entry.kind !== "tag") return;
+          // Ignore this option's own group so alternatives can still be added (OR).
+          // Keep selected options reachable even when other filters give zero matches.
+          const available = !selected.size || availableByGroup.get(entry.group).has(entry.className);
+          input.closest(".kf-item").hidden = !available && !selected.has(entry.key);
+        });
+        grid.querySelectorAll(".kf-group:not(.kf-group--categories)").forEach(section => {
+          section.hidden = ![...section.querySelectorAll(".kf-item")].some(item => !item.hidden);
+        });
+      }
       function apply() {
         const cards = [...productGrid.querySelectorAll(".ProductList-item")];
         const currentURL = new URL(location.href);
@@ -216,6 +242,7 @@
           if (!activeGroups.has(entry.group)) activeGroups.set(entry.group, []);
           activeGroups.get(entry.group).push(entry.className);
         });
+        updateContextualTags(cards, activeGroups);
         let visible = 0;
         cards.forEach(card => {
           const matches = [...activeGroups.values()].every(tags => tags.some(tag => card.classList.contains(tag)));
