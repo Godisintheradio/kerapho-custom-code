@@ -1,4 +1,4 @@
-# Filtri prodotti globali — v1.3.2
+# Filtri prodotti globali — v1.3.3
 
 Pannello compatto con checkbox e combinazioni di categorie e tag. Il componente riusa la
 cloud tag e le schede prodotto già presenti nelle pagine elenco prodotti; non esegue fetch,
@@ -10,8 +10,8 @@ Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione cod
 
 ```html
 <!-- Kerapho: filtri prodotti globali -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.3.2">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.3.2"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.3.3">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.3.3"></script>
 ```
 
 Mantenere un blocco tag Squarespace collegato alla raccolta corrente in ogni pagina elenco: fornisce le voci del pannello. Senza un blocco corrispondente il componente lascia intatta la navigazione nativa.
@@ -29,7 +29,7 @@ Non duplicare i collegamenti. Dopo l'aggiornamento ricaricare con Ctrl+F5.
 - Da 768 px pannello e tutti i gruppi inizialmente aperti, richiudibili manualmente.
 - Sotto 768 px pannello e tutti i gruppi inizialmente chiusi; l’utente apre solo quelli necessari.
 - Da 768 px il contenitore del filtro è sticky a 120 px dall’alto su tutte le raccolte gestite.
-- Pannelli più alti dello spazio disponibile scorrono internamente per rendere accessibili tutte le opzioni. Su mobile il filtro segue lo scorrimento della pagina.
+- Altezza naturale senza limite massimo e senza scrollbar interna: il filtro usa lo scorrimento della pagina. Su desktop resta sticky; se supera lo schermo, parte del pannello può rimanere fuori vista finché non si raggiunge il limite del contenitore.
 - Gruppi disposti su una colonna nel contenitore nativo.
 - Opzioni affiancate con larghezza naturale e ritorno a capo automatico.
 - Checkbox native, spaziatura compatta e area di tocco da 44 px su mobile.
@@ -106,6 +106,6 @@ Nel CSS allegato sono inoltre presenti due dichiarazioni di padding della
 ProductList-grid (una globale e una desktop). Non sono la causa del conteggio
 nth-child: non occorre modificarle per applicare questa correzione.
 
-## Estensione globale v1.3.2
+## Estensione globale v1.3.3
 
 Il componente individua la raccolta dai collegamenti della navigazione categorie e usa esclusivamente la cloud tag collegata allo stesso percorso. Non esegue richieste di rete, nemmeno quando il blocco tag manca. Schede prodotto e altre pagine sono escluse. I marchi ceramici presenti nello Shop sono inclusi nella mappa; i tag non classificati restano disponibili in Altri filtri.
