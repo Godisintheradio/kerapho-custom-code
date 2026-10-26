@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.4.0 */
+/* Kerapho — compact checkbox tag filters v1.4.1 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -193,7 +193,7 @@
 /* Desktop sidebar stays sticky with natural, unconstrained panel height. */
 @media (min-width: 768px) {
   .ProductList-filter.ProductList-filter--categories.kf-filter-host {
-    --kf-sticky-top: 120px;
+    --kf-sticky-top: 16px;
     position: sticky;
     top: var(--kf-sticky-top);
     align-self: start;
