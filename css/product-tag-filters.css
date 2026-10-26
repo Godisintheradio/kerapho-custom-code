@@ -1,4 +1,4 @@
-/* Kerapho — compact checkbox tag filters v1.3.0 */
+/* Kerapho — compact checkbox tag filters v1.3.1 */
 .sqs-tagcloud.kf-source,
 .sqs-block-tagcloud.kf-source-block,
 .ProductList .ProductList-item.kf-hidden,
@@ -188,6 +188,29 @@
 }
 @media (max-width: 767px) {
   .ProductList-filter.ProductList-filter--categories.kf-filter-host { padding: 0; }
+}
+
+/* Desktop sidebar stays visible; long panels scroll within the viewport. */
+@media (min-width: 768px) {
+  .ProductList-filter.ProductList-filter--categories.kf-filter-host {
+    --kf-sticky-top: 120px;
+    position: sticky;
+    top: var(--kf-sticky-top);
+    align-self: start;
+    z-index: 10;
+  }
+  .ProductList-filter.ProductList-filter--categories.kf-filter-host > .kf-panel {
+    max-height: calc(100vh - var(--kf-sticky-top) - 16px);
+    max-height: calc(100dvh - var(--kf-sticky-top) - 16px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+}
+@media (max-width: 767px) {
+  .ProductList-filter.ProductList-filter--categories.kf-filter-host {
+    position: static;
+    top: auto;
+  }
 }
 
 /* Compact visible cards in rows: native nth-child/float rules count hidden cards. */
