@@ -1,4 +1,4 @@
-# Filtri prodotti globali — v1.5.0
+# Filtri prodotti globali — v1.5.1
 
 Pannello compatto con checkbox e combinazioni di categorie e tag. Il componente riusa la
 cloud tag e le schede prodotto già presenti nelle pagine elenco prodotti; non esegue fetch,
@@ -10,8 +10,8 @@ Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione cod
 
 ```html
 <!-- Kerapho: filtri prodotti globali -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.5.0">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.5.0"></script>
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.5.1">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.5.1"></script>
 ```
 
 Mantenere un blocco tag Squarespace collegato alla raccolta corrente in ogni pagina elenco: fornisce le voci del pannello. Senza un blocco corrispondente il componente lascia intatta la navigazione nativa.
@@ -29,7 +29,7 @@ Non duplicare i collegamenti. Dopo l'aggiornamento ricaricare con Ctrl+F5.
 - Da 768 px pannello e tutti i gruppi inizialmente aperti, richiudibili manualmente.
 - Sotto 768 px pannello e tutti i gruppi inizialmente chiusi; l’utente apre solo quelli necessari.
 - Da 768 px il contenitore del filtro è sticky a 16 px dall’alto su tutte le raccolte gestite.
-- Altezza naturale senza limite massimo e senza scrollbar interna: il filtro usa lo scorrimento della pagina. Su desktop resta sticky; se supera lo schermo, parte del pannello può rimanere fuori vista finché non si raggiunge il limite del contenitore.
+- Su desktop il pannello ha altezza massima pari allo schermo meno la distanza superiore di 16 px e un margine inferiore di 16 px. Se necessario, compare la scrollbar interna. Su mobile resta lo scorrimento normale della pagina.
 - Gruppi disposti su una colonna nel contenitore nativo.
 - Opzioni affiancate con larghezza naturale e ritorno a capo automatico.
 - Checkbox native, spaziatura compatta e area di tocco da 44 px su mobile.
@@ -106,14 +106,18 @@ Nel CSS allegato sono inoltre presenti due dichiarazioni di padding della
 ProductList-grid (una globale e una desktop). Non sono la causa del conteggio
 nth-child: non occorre modificarle per applicare questa correzione.
 
-## Estensione globale v1.5.0
+## Estensione globale v1.5.1
 
 Il componente individua la raccolta dai collegamenti della navigazione categorie e usa esclusivamente la cloud tag collegata allo stesso percorso. Non esegue richieste di rete, nemmeno quando il blocco tag manca. Schede prodotto e altre pagine sono escluse. I marchi ceramici presenti nello Shop sono inclusi nella mappa; i tag non classificati restano disponibili in Altri filtri.
 
-## Tag pertinenti alle categorie — v1.5.0
+## Tag pertinenti alle categorie — v1.5.1
 
-Se vengono selezionate categorie, il pannello mostra solo i tag presenti nelle schede appartenenti ad almeno una categoria selezionata. I gruppi senza opzioni vengono nascosti. Dalla v1.5.0 anche i tag selezionati aggiornano gli altri pannelli, come descritto sotto. Senza categorie selezionate vengono ripristinati tutti i tag della cloud. Cambiando categorie, i tag selezionati non più pertinenti vengono rimossi anche da URL e conteggi. Su pagine native filtrate, la pulizia delle selezioni avviene solo dopo il ritorno alla raccolta base, per evitare di dedurre la disponibilità da un sottoinsieme ristretto. Con paginazione, la disponibilità riflette le sole schede caricate nella pagina. Nessuna richiesta aggiuntiva.
+Se vengono selezionate categorie, il pannello mostra solo i tag presenti nelle schede appartenenti ad almeno una categoria selezionata. I gruppi senza opzioni vengono nascosti. Dalla v1.5.1 anche i tag selezionati aggiornano gli altri pannelli, come descritto sotto. Senza categorie selezionate vengono ripristinati tutti i tag della cloud. Cambiando categorie, i tag selezionati non più pertinenti vengono rimossi anche da URL e conteggi. Su pagine native filtrate, la pulizia delle selezioni avviene solo dopo il ritorno alla raccolta base, per evitare di dedurre la disponibilità da un sottoinsieme ristretto. Con paginazione, la disponibilità riflette le sole schede caricate nella pagina. Nessuna richiesta aggiuntiva.
 
-## Pannelli pertinenti alle selezioni — v1.5.0
+## Pannelli pertinenti alle selezioni — v1.5.1
 
 Anche marchi, colori, misure e altri tag aggiornano le opzioni degli altri pannelli. Ogni gruppo considera le selezioni degli altri gruppi, escludendo le proprie per permettere di aggiungere alternative OR. Le categorie restano tutte selezionabili. I tag selezionati rimangono visibili anche se non producono risultati, così possono essere rimossi. Cambiare categoria continua a rimuovere i tag non presenti nelle categorie scelte. I gruppi senza opzioni pertinenti e senza selezioni vengono nascosti. Azzerando i filtri tornano tutte le opzioni della cloud. Il calcolo usa solo le schede caricate e non esegue richieste aggiuntive.
+
+## Scrollbar ripristinata — v1.5.1
+
+Ripristinata la scrollbar interna su desktop soltanto quando il pannello supera l’altezza disponibile. Restano invariati sticky a 16 px, pannelli aperti su desktop e chiusi su mobile, logica e pertinenza dei filtri.
