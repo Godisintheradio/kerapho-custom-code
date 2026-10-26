@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.2.3. No product requests. */
+/* Kerapho — compact checkbox tag filters, v1.3.0. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.2.3";
+  const VERSION = "1.3.0";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -9,7 +9,7 @@
   window.KeraphoTagFilters?.destroy?.();
   const normalize = value => value.trim().normalize("NFC").toLocaleLowerCase("it");
   const groups = [
-    ["Marchi", ["ACQUALIFE", "ARCADIA", "CIPI", "GB GROUP", "GEBERIT", "GSG", "PONTEGIULIO", "RELAX", "TREEMME", "VALDAMA"]],
+    ["Marchi", ["ACQUALIFE", "ARCADIA", "CIPI", "GB GROUP", "GEBERIT", "GSG", "PONTEGIULIO", "RELAX", "TREEMME", "VALDAMA", "IMPRONTA CERAMICHE", "SICHENIA", "SINTESI", "FAP CERAMICHE", "COTTO PETRUS", "GAMBINI", "DADO CERAMICA"]],
     ["Materiale lavabo", ["Lavabi in Cemento", "Lavabi in Ceramica", "Lavabi in Legno", "Lavabi in Metallo", "Lavabi in Resina", "Lavabi in Vetro"]],
     ["Installazione lavabo", ["Lavabi da Appoggio", "Lavabi Freestanding", "Freestanding"]],
     ["Installazione mobile", ["Mobili a Terra", "Mobili Sospesi"]],
@@ -40,7 +40,7 @@
   const controllers = new Set();
   function slug(tag) {
     return normalize(tag)
-      .replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+      .replace(/[^a-z0-9_\s-]/g, "").replace(/\s+/g, "-").replace(/^-+|-+$/g, "");
   }
   function readSelection(known) {
     const url = new URL(location.href);
@@ -61,12 +61,15 @@
 
   function mount() {
     [...controllers].forEach(cleanup => { if (!cleanup.target.isConnected) cleanup(); });
-    if (location.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
     const target = document.querySelector(".Main.Main--products-list .ProductList.products-collection-v2.sqs-pinterest-products-wrapper");
     const productGrid = target?.querySelector(".ProductList-grid");
     if (!target || !productGrid) return;
     const host = target.querySelector(".ProductList-filter.ProductList-filter--categories");
     if (!host) return;
+    const baseLink = host.querySelector("a[href]");
+    const collectionURL = new URL(baseLink?.getAttribute("href") || location.href, location.origin);
+    if (collectionURL.origin !== location.origin) return;
+    const collectionPath = collectionURL.pathname.replace(/\/+$/, "");
     const previous = host.querySelector(":scope > .kf-panel");
     for (const source of document.querySelectorAll(".sqs-tagcloud")) {
       if (previous?._kfUpdate && previous._keraphoSource === source && previous.dataset.category === (new URL(location.href).searchParams.get("category") || "")) {
@@ -78,7 +81,7 @@
       source.querySelectorAll("a[href]").forEach(link => {
         let url;
         try { url = new URL(link.getAttribute("href"), location.origin); } catch (_) { return; }
-        if (url.origin !== location.origin || url.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
+        if (url.origin !== location.origin || url.pathname.replace(/\/+$/, "") !== collectionPath) return;
         const tag = url.searchParams.get("tag");
         if (!tag || known.has(normalize(tag))) return;
         const key = normalize(tag);
@@ -92,7 +95,7 @@
       target.querySelectorAll(".ProductList-filter--categories a[href]").forEach(link => {
         let url;
         try { url = new URL(link.getAttribute("href"), location.origin); } catch (_) { return; }
-        if (url.origin !== location.origin || url.pathname.replace(/\/+$/, "") !== "/arredo-bagno") return;
+        if (url.origin !== location.origin || url.pathname.replace(/\/+$/, "") !== collectionPath) return;
         const tag = url.searchParams.get("category");
         if (!tag) return;
         const key = "category:" + normalize(tag);
@@ -101,6 +104,7 @@
         known.set(key, entry);
         categoryItems.push(entry);
       });
+      if (!known.size) continue;
       let selected = readSelection(known);
       const panel = element("details", "kf-panel");
       panel.dataset.category = new URL(location.href).searchParams.get("category") || "";
