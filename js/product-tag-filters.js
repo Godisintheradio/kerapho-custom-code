@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.3.3. Uses native tag blocks; no network requests. */
+/* Kerapho — compact checkbox tag filters, v1.4.0. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.3.3";
+  const VERSION = "1.4.0";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -176,7 +176,39 @@
           link.href = url.href;
         });
       }
+      function updateAvailableTags(cards, prune = true) {
+        const categories = [...selected].map(key => known.get(key))
+          .filter(entry => entry?.kind === "category").map(entry => entry.className);
+        const available = new Set();
+        cards.forEach(card => {
+          if (!categories.length || categories.some(name => card.classList.contains(name))) {
+            card.classList.forEach(name => { if (name.startsWith("tag-")) available.add(name); });
+          }
+        });
+        let removed = 0;
+        inputs.forEach(input => {
+          const entry = known.get(input.value);
+          if (entry.kind !== "tag") return;
+          // With no categories selected, restore every tag from the collection cloud.
+          const exists = !categories.length || available.has(entry.className);
+          input.closest(".kf-item").hidden = !exists;
+          if (!exists && prune && selected.delete(entry.key)) removed++;
+        });
+        grid.querySelectorAll(".kf-group:not(.kf-group--categories)").forEach(section => {
+          section.hidden = ![...section.querySelectorAll(".kf-item")].some(item => !item.hidden);
+        });
+        return removed;
+      }
       function apply() {
+        const cards = [...productGrid.querySelectorAll(".ProductList-item")];
+        const currentURL = new URL(location.href);
+        // A native filtered page is a server-side subset. Do not discard selections
+        // until commitSelection has reloaded the base collection.
+        const nativeFiltered = currentURL.searchParams.has("tag") || currentURL.searchParams.has("category");
+        if (updateAvailableTags(cards, !nativeFiltered)) {
+          writeSelection(currentURL);
+          window.history.replaceState(window.history.state, "", currentURL.href);
+        }
         const activeGroups = new Map();
         selected.forEach(key => {
           const entry = known.get(key);
@@ -184,7 +216,6 @@
           if (!activeGroups.has(entry.group)) activeGroups.set(entry.group, []);
           activeGroups.get(entry.group).push(entry.className);
         });
-        const cards = [...productGrid.querySelectorAll(".ProductList-item")];
         let visible = 0;
         cards.forEach(card => {
           const matches = [...activeGroups.values()].every(tags => tags.some(tag => card.classList.contains(tag)));
@@ -207,6 +238,7 @@
       function commitSelection() {
         const url = new URL(location.href);
         const nativeFiltered = url.searchParams.has("tag") || url.searchParams.has("category");
+        if (!nativeFiltered) updateAvailableTags([...productGrid.querySelectorAll(".ProductList-item")]);
         url.searchParams.delete("tag");
         url.searchParams.delete("category");
         writeSelection(url);
