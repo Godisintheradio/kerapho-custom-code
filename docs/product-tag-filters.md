@@ -1,7 +1,7 @@
-# Filtri tag Arredo bagno — v1.2.3
+# Filtri prodotti globali — v1.3.0
 
 Pannello compatto con checkbox e combinazioni di categorie e tag. Il componente riusa la
-cloud tag e le schede prodotto già presenti su `/arredo-bagno`; non esegue fetch,
+cloud tag e le schede prodotto già presenti nelle pagine elenco prodotti; non esegue fetch,
 non legge le singole pagine prodotto e non modifica il catalogo.
 
 ## Collegamento Squarespace
@@ -9,12 +9,12 @@ non legge le singole pagine prodotto e non modifica il catalogo.
 Sostituire il precedente blocco in **Impostazioni → Avanzate → Iniezione codice → Footer**:
 
 ```html
-<!-- Kerapho: filtri tag Arredo bagno -->
-<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.2.3">
-<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.2.3"></script>
+<!-- Kerapho: filtri prodotti globali -->
+<link rel="stylesheet" href="https://godisintheradio.github.io/kerapho-custom-code/css/product-tag-filters.css?v=1.3.0">
+<script defer src="https://godisintheradio.github.io/kerapho-custom-code/js/product-tag-filters.js?v=1.3.0"></script>
 ```
 
-Mantenere il blocco tag Squarespace nella pagina: fornisce le voci del pannello.
+Mantenere un blocco tag Squarespace collegato alla raccolta corrente in ogni pagina elenco: fornisce le voci del pannello. Senza un blocco corrispondente il componente lascia intatta la navigazione nativa.
 Non duplicare i collegamenti. Dopo l'aggiornamento ricaricare con Ctrl+F5.
 
 ## Design
@@ -99,8 +99,12 @@ o parziali e allineamenti irregolari.
 La classe `kf-product-grid` viene applicata soltanto alla griglia gestita dal
 filtro. Su questa griglia CSS Grid dispone le sole schede visibili, annullando
 float, clear, larghezze percentuali e margini delle singole schede. Mantiene
-10 px tra colonne e 30 px tra righe. Le altre raccolte restano invariate.
+10 px tra colonne e 30 px tra righe. La correzione si applica alle sole raccolte con il filtro montato.
 
 Nel CSS allegato sono inoltre presenti due dichiarazioni di padding della
 ProductList-grid (una globale e una desktop). Non sono la causa del conteggio
 nth-child: non occorre modificarle per applicare questa correzione.
+
+## Estensione globale v1.3.0
+
+Il componente individua la raccolta dai collegamenti della navigazione categorie e usa esclusivamente la cloud tag collegata allo stesso percorso. Non esegue richieste di rete, nemmeno quando il blocco tag manca. Schede prodotto e altre pagine sono escluse. I marchi ceramici presenti nello Shop sono inclusi nella mappa; i tag non classificati restano disponibili in Altri filtri.
