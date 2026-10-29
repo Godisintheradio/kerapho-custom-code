@@ -1,7 +1,7 @@
-/* Kerapho — compact checkbox tag filters, v1.5.1. Uses native tag blocks; no network requests. */
+/* Kerapho — compact checkbox tag filters, v1.6.0. Uses native tag blocks; no network requests. */
 (function () {
   "use strict";
-  const VERSION = "1.5.1";
+  const VERSION = "1.6.0";
   if (window.KeraphoTagFilters?.version === VERSION) {
     window.KeraphoTagFilters.refresh();
     return;
@@ -10,6 +10,7 @@
   const normalize = value => value.trim().normalize("NFC").toLocaleLowerCase("it");
   const groups = [
     ["Marchi", ["ACQUALIFE", "ARCADIA", "CIPI", "GB GROUP", "GEBERIT", "GSG", "PONTEGIULIO", "RELAX", "TREEMME", "VALDAMA", "IMPRONTA CERAMICHE", "SICHENIA", "SINTESI", "FAP CERAMICHE", "COTTO PETRUS", "GAMBINI", "DADO CERAMICA"]],
+    ["Collezioni", []],
     ["Materiale lavabo", ["Lavabi in Cemento", "Lavabi in Ceramica", "Lavabi in Legno", "Lavabi in Metallo", "Lavabi in Resina", "Lavabi in Vetro"]],
     ["Installazione lavabo", ["Lavabi da Appoggio", "Lavabi Freestanding", "Freestanding"]],
     ["Installazione mobile", ["Mobili a Terra", "Mobili Sospesi"]],
@@ -19,8 +20,17 @@
   ];
   const mapping = new Map();
   groups.forEach(([title, tags], index) => tags.forEach(tag => mapping.set(normalize(tag), index)));
+  const groupIndices = new Map(groups.map(([name], index) => [name, index]));
   const dimensions = /^\d+(?:[.,]\d+)?\s*(?:[x×]\s*\d+(?:[.,]\d+)?\s*){1,2}(?:cm|mm|m)?$/i;
   const collator = new Intl.Collator("it", { numeric: true, sensitivity: "base" });
+
+  function groupForTag(tag) {
+    const key = normalize(tag);
+    if (/^collezione\s+\S/i.test(key)) return groupIndices.get("Collezioni");
+    if (/^colore\s+/i.test(key)) return groupIndices.get("Colori");
+    if (dimensions.test(key)) return groupIndices.get("Misure");
+    return mapping.get(key) ?? groupIndices.get("Altri filtri");
+  }
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -29,6 +39,7 @@
     return node;
   }
   function label(tag, group) {
+    if (group === "Collezioni") return tag.trim().replace(/^collezione\s+/i, "");
     if (group === "Colori") return tag.replace(/^colore\s+/i, "");
     if (group === "Materiale lavabo") return tag.replace(/^lavabi in\s+/i, "");
     if (group === "Installazione lavabo") return tag.replace(/^lavabi\s+/i, "");
@@ -85,7 +96,7 @@
         const tag = url.searchParams.get("tag");
         if (!tag || known.has(normalize(tag))) return;
         const key = normalize(tag);
-        const group = /^colore\s+/i.test(tag) ? 6 : dimensions.test(tag) ? 7 : (mapping.get(key) ?? 8);
+        const group = groupForTag(tag);
         const entry = { tag, key, group, kind: "tag", className: "tag-" + slug(tag) };
         known.set(key, entry);
         buckets[group].push(entry);
