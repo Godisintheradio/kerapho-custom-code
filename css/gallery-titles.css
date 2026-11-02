@@ -1,0 +1,91 @@
+/* Kerapho - Titoli gallerie con freccia SVG.
+ * Squarespace 7.0 - griglie con sola visualizzazione del titolo.
+ */
+
+/* Titolo della galleria */
+.sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+.margin-wrapper .image-slide-title {
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 10px 0 0;
+    padding: 0 30px 0 0;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    color: #292825;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+}
+
+/* Elimina la punta creata dal codice precedente */
+.sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+.margin-wrapper .image-slide-title::before {
+    content: none;
+}
+
+/* Freccia unica: spessore 2px */
+.sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+.margin-wrapper .image-slide-title::after {
+    content: "";
+    position: absolute;
+    display: block;
+    top: 2px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    border: none;
+
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23292825' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12h16M14 6l6 6-6 6'/%3E%3C/svg%3E")
+        center / contain no-repeat;
+
+    pointer-events: none;
+    transform: none;
+    transition: transform 0.2s ease;
+}
+
+/* Eventuale link nel titolo */
+.sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+.margin-wrapper .image-slide-title a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: none;
+}
+
+/* Hover su tutta la card */
+@media (hover: hover) {
+    .sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+    .margin-wrapper:hover .image-slide-title::after {
+        transform: translateX(3px);
+    }
+}
+
+/* Mobile */
+@media screen and (max-width: 640px) {
+    .sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+    .margin-wrapper .image-slide-title {
+        margin-top: 8px;
+        font-size: 13px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sqs-gallery-block-grid.sqs-gallery-block-meta-only-title
+    .margin-wrapper .image-slide-title::after {
+        transition: none;
+    }
+}
