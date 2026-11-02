@@ -589,3 +589,40 @@
   }
 
 }
+/* ==========================================================
+   KERAPHO — SEARCH DESKTOP
+   ESPANSIONE AREA CENTRALE HEADER
+   ========================================================== */
+
+@media screen and (min-width: 641px) {
+
+  .Header-inner--top
+  [data-nc-container="top-center"] {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .Header-inner--top
+  [data-nc-container="top-center"]
+  .Header-search {
+    flex: 1 1 auto !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+  }
+
+  .Header-inner--top
+  [data-nc-container="top-center"]
+  .Header-search-form {
+    width: 100% !important;
+  }
+
+}
