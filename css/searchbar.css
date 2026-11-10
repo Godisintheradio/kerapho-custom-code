@@ -626,3 +626,187 @@
   }
 
 }
+
+
+/* ==========================================================
+   KERAPHO — SEARCH CON FILTRO RACCOLTA
+   Test desktop
+   ========================================================== */
+
+@media screen and (min-width: 641px) {
+
+  .Header-search-form {
+    display: flex !important;
+    align-items: stretch !important;
+
+    width: 100% !important;
+    min-width: 0 !important;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+  }
+
+
+  /* --------------------------------------------------------
+     SELETTORE RACCOLTA
+     -------------------------------------------------------- */
+
+  .ag-search-scope-wrap {
+    position: relative;
+
+    flex: 0 0 auto;
+
+    height: 46px;
+
+    display: flex;
+    align-items: center;
+
+    background: #e2e2e2;
+
+    border: 1px solid #c6c6c6;
+    border-right: 0;
+
+    border-radius: 24px 0 0 24px;
+
+    box-sizing: border-box;
+
+    overflow: hidden;
+  }
+
+
+  .ag-search-scope-wrap::after {
+    content: "";
+
+    position: absolute;
+
+    right: 10px;
+    top: 50%;
+
+    width: 6px;
+    height: 6px;
+
+    border-right: 1px solid #666;
+    border-bottom: 1px solid #666;
+
+    transform:
+      translateY(-65%)
+      rotate(45deg);
+
+    pointer-events: none;
+  }
+
+
+  .ag-search-scope-select {
+    appearance: none;
+    -webkit-appearance: none;
+
+    height: 44px;
+
+    min-width: 154px;
+
+    box-sizing: border-box;
+
+    padding: 0 30px 0 16px;
+
+    margin: 0;
+
+    border: 0;
+
+    outline: none;
+
+    background: transparent;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    line-height: 1;
+
+    color: #555;
+
+    cursor: pointer;
+  }
+
+
+  .ag-search-scope-select:focus {
+    outline: none;
+  }
+
+
+  /* --------------------------------------------------------
+     CAMPO
+     -------------------------------------------------------- */
+
+  .Header-search-form
+  .Header-search-form-input {
+
+    flex: 1 1 auto !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+
+    border-left: 0 !important;
+
+    border-radius: 0 !important;
+
+    padding-left: 16px !important;
+    padding-right: 14px !important;
+  }
+
+
+  /* Lente interna non più necessaria:
+     la Search viene rappresentata dal pulsante a destra. */
+
+  .Header-search:has(
+    .ag-search-scope-wrap
+  )::before {
+    display: none;
+  }
+
+
+  /* --------------------------------------------------------
+     PULSANTE SEARCH
+     -------------------------------------------------------- */
+
+  .Header-search-form-submit {
+
+    flex: 0 0 46px !important;
+
+    width: 46px !important;
+    height: 46px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #006880 !important;
+
+    border: 1px solid #006880 !important;
+    border-radius: 0 24px 24px 0 !important;
+
+    color: #fff !important;
+
+    cursor: pointer;
+  }
+
+
+  .Header-search-form-submit
+  .Icon {
+
+    width: 18px !important;
+    height: 18px !important;
+
+    color: #fff !important;
+    fill: currentColor;
+  }
+
+
+  .Header-search-form-submit:hover {
+    filter: brightness(0.96);
+  }
+
+}
