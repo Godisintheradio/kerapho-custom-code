@@ -838,7 +838,7 @@
      -------------------------------------------------------- */
 
   .ag-search-scope-wrap {
-    height: 44px !important;
+    height: 46px !important;
 
     background: transparent !important;
 
@@ -850,7 +850,7 @@
 
 
   .ag-search-scope-select {
-    height: 44px !important;
+    height: 46px !important;
 
     min-width: 190px !important;
 
@@ -861,6 +861,8 @@
 
     font-size: 13px !important;
     font-weight: 500 !important;
+
+    line-height: 46px !important;
 
     color: #555 !important;
   }
@@ -922,14 +924,23 @@
     flex: 0 0 46px !important;
 
     width: 46px !important;
-    height: 44px !important;
+    height: 46px !important;
+
+    display: grid !important;
+    place-items: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
 
     background: #111111 !important;
 
     border: 0 !important;
-    border-left: 1px solid rgba(255,255,255,0.16) !important;
 
-    border-radius: 0 22px 22px 0 !important;
+    border-radius: 50% !important;
+
+    color: #fff !important;
+
+    box-sizing: border-box !important;
   }
 
 
