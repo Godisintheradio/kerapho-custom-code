@@ -63,6 +63,12 @@
 
   let searchPanel = null;
 
+  /*
+   * Ambito corrente della ricerca.
+   * 'all' = tutte le raccolte.
+   */
+  let searchScope = 'all';
+
   /* ==========================================================
      3. NORMALIZZAZIONE TESTO
 
@@ -704,6 +710,17 @@
     productIndex.forEach(
       function (product) {
 
+        /*
+         * Se è stato selezionato un reparto,
+         * limita i risultati a quella raccolta.
+         */
+        if (
+          searchScope !== 'all' &&
+          product.collection !== searchScope
+        ) {
+          return;
+        }
+
         const title =
           normalize(
             product.title
@@ -858,7 +875,105 @@
   }
 
   /* ==========================================================
-     12. PANNELLO RISULTATI
+     12. FILTRO RICERCA PER RACCOLTA
+     ========================================================== */
+
+  function createSearchScopeSelector() {
+
+    if (!searchContainer) {
+      return;
+    }
+
+    const form =
+      searchContainer.querySelector(
+        '.Header-search-form'
+      );
+
+    if (!form || !searchInput) {
+      return;
+    }
+
+    if (
+      form.querySelector(
+        '.ag-search-scope-wrap'
+      )
+    ) {
+      return;
+    }
+
+    const wrapper =
+      document.createElement(
+        'div'
+      );
+
+    wrapper.className =
+      'ag-search-scope-wrap';
+
+    const select =
+      document.createElement(
+        'select'
+      );
+
+    select.className =
+      'ag-search-scope-select';
+
+    select.setAttribute(
+      'aria-label',
+      'Cerca in'
+    );
+
+    const allOption =
+      document.createElement(
+        'option'
+      );
+
+    allOption.value =
+      'all';
+
+    allOption.textContent =
+      'Tutti';
+
+    select.appendChild(
+      allOption
+    );
+
+    CONFIG.collections.forEach(
+      function (collection) {
+
+        const option =
+          document.createElement(
+            'option'
+          );
+
+        option.value =
+          collection.label;
+
+        option.textContent =
+          collection.label;
+
+        select.appendChild(
+          option
+        );
+
+      }
+    );
+
+    select.value =
+      searchScope;
+
+    wrapper.appendChild(
+      select
+    );
+
+    form.insertBefore(
+      wrapper,
+      searchInput
+    );
+
+  }
+
+  /* ==========================================================
+     13. PANNELLO RISULTATI
      ========================================================== */
 
   function createPanel() {
@@ -1280,6 +1395,72 @@
 
       }
     );
+
+    /*
+     * Cambio reparto.
+     * Il filtro lavora sull'indice già caricato:
+     * non genera richieste aggiuntive quando l'indice è disponibile.
+     */
+
+    const scopeSelect =
+      searchContainer.querySelector(
+        '.ag-search-scope-select'
+      );
+
+    if (scopeSelect) {
+
+      scopeSelect.addEventListener(
+        'change',
+        async function () {
+
+          searchScope =
+            scopeSelect.value;
+
+          const query =
+            searchInput.value
+              .trim();
+
+          if (
+            query.length <
+            CONFIG.minCharacters
+          ) {
+
+            closePanel();
+
+            return;
+
+          }
+
+          searchPanel.innerHTML =
+            '<div class="ag-search-status">' +
+            'Ricerca prodotti...' +
+            '</div>';
+
+          openPanel();
+
+          try {
+
+            await loadProductIndex();
+
+            renderResults(
+              query
+            );
+
+          }
+
+          catch (error) {
+
+            searchPanel.innerHTML =
+              '<div class="ag-search-status">' +
+              'Impossibile caricare il catalogo.' +
+              '</div>';
+
+          }
+
+        }
+      );
+
+    }
 
     /* Click esterno */
 
@@ -1879,6 +2060,10 @@ function init() {
       'Cerca prodotti...'
     );
 
+    /*
+     * Filtro raccolta visibile sul desktop.
+     */
+    createSearchScopeSelector();
 
     createPanel();
 
