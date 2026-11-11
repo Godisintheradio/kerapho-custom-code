@@ -1,239 +1,388 @@
 /*!
- * KERAPHO — BREADCRUMB ENGINE V2.3
- * Squarespace 7.0 | Automatic ecommerce collections/categories
- * Native appearance; integrated 220ms fade-in.
+ * KERAPHO BREADCRUMB ENGINE V2.1 — GitHub Edition
+ * Squarespace 7.0
+ * V2.0 collaudata + CSS fade-in integrato.
+ * Stili tipografici e separatori gestiti dal template Squarespace.
  */
 (function () {
   "use strict";
-  if (window.__keraphoBreadcrumbEngineV23) return;
-  window.__keraphoBreadcrumbEngineV23 = true;
 
-  const SELECTOR = ".ProductItem-nav-breadcrumb";
-  const STYLE_ID = "kerapho-breadcrumb-v23-style";
-  const ORIGIN_PREFIX = "kerapho-breadcrumb-origin-v23:";
-  const CACHE_PREFIX = "kerapho-breadcrumb-product-v23:";
-  const MAX_TITLE = 15;
-  const CACHE_TTL = 30 * 60 * 1000;
-  const ORIGIN_TTL = 10 * 60 * 1000;
-  let runId = 0;
+  if (window.KeraphoBreadcrumbV2) return;
+  window.KeraphoBreadcrumbV2 = true;
 
-  function pathOf(value) {
+  const CONFIG = {
+    maxTitleLength: 15,
+    cacheTTL: 30 * 60 * 1000,
+    navigationTTL: 5 * 60 * 1000,
+    selector: ".ProductItem-nav-breadcrumb",
+    debug: false
+  };
+
+  const CACHE_PREFIX = "kb-v2-product:";
+  const NAV_KEY = "kb-v2-navigation";
+
+  // Solo la dissolvenza: font, colore e separatore restano nativi.
+  function injectStyles() {
+    if (document.getElementById("kb-v2-fade-style")) return;
+    const style = document.createElement("style");
+    style.id = "kb-v2-fade-style";
+    style.textContent = [
+      "html.kb-product-page .ProductItem-nav-breadcrumb:not(.kb-ready) {",
+      "  opacity: 0 !important;",
+      "  visibility: hidden !important;",
+      "}",
+      "html.kb-product-page .ProductItem-nav-breadcrumb.kb-ready {",
+      "  opacity: 1;",
+      "  visibility: visible;",
+      "  animation: kb-v2-fade-in 220ms ease-out both;",
+      "}",
+      "@keyframes kb-v2-fade-in {",
+      "  from { opacity: 0; }",
+      "  to { opacity: 1; }",
+      "}",
+      "@media (prefers-reduced-motion: reduce) {",
+      "  html.kb-product-page .ProductItem-nav-breadcrumb.kb-ready { animation: none; }",
+      "}"
+    ].join("\n");
+    document.head.appendChild(style);
+  }
+
+  const log = (...args) => {
+    if (CONFIG.debug) {
+      console.log("[Kerapho Breadcrumb]", ...args);
+    }
+  };
+
+  function normalizePath(value) {
+    if (!value) return "";
     try {
       const url = new URL(value, location.origin);
       if (url.origin !== location.origin) return "";
-      return url.pathname.replace(/\/+$/, "") || "/";
-    } catch { return ""; }
+      return (url.pathname.replace(/\/+$/, "") || "/");
+    } catch {
+      return "";
+    }
   }
 
-  function categoryKey(value) {
-    return String(value || "").trim().normalize("NFC").toLocaleLowerCase("it");
+  function normalizeCategory(value) {
+    return String(value || "")
+      .normalize("NFC")
+      .trim()
+      .toLocaleLowerCase("it");
   }
 
-  function storageGet(key) {
-    try { return JSON.parse(sessionStorage.getItem(key) || "null"); }
-    catch { return null; }
-  }
-  function storageSet(key, value) {
-    try { sessionStorage.setItem(key, JSON.stringify(value)); }
-    catch {}
+  function shortenTitle(value) {
+    const title = String(value || "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (title.length <= CONFIG.maxTitleLength) return title;
+    return title.slice(0, CONFIG.maxTitleLength).trim() + "...";
   }
 
-  function productContext() {
-    const ctx = window.Static?.SQUARESPACE_CONTEXT;
-    const collection = ctx?.collection;
-    const item = ctx?.item;
-    if (collection?.type !== 13 || !collection.fullUrl || !item?.id || !item.fullUrl) return null;
-    const collectionPath = pathOf(collection.fullUrl);
-    const productPath = pathOf(item.fullUrl);
-    if (!collectionPath || !productPath || productPath === collectionPath ||
-        productPath !== pathOf(location.href)) return null;
+  function readStorage(key) {
+    try {
+      const raw = sessionStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStorage(key, value) {
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value));
+    } catch {}
+  }
+
+  function getCategoryFromURL(value) {
+    try {
+      const url = new URL(value, location.origin);
+      if (url.origin !== location.origin) return null;
+      return url.searchParams.get("category");
+    } catch {
+      return null;
+    }
+  }
+
+  function getProductContext() {
+    const context = window.Static?.SQUARESPACE_CONTEXT;
+    if (!context) return null;
+    const collection = context.collection;
+    const item = context.item;
+    if (
+      collection?.type !== 13 ||
+      !collection.fullUrl ||
+      !item?.id ||
+      !item?.fullUrl
+    ) return null;
+
+    const collectionPath = normalizePath(collection.fullUrl);
+    const productPath = normalizePath(item.fullUrl);
+
+    if (
+      !collectionPath ||
+      !productPath ||
+      productPath === collectionPath ||
+      normalizePath(location.href) !== productPath
+    ) return null;
+
     return {
-      collectionPath, productPath, itemId: item.id,
-      collectionTitle: collection.navigationTitle || collection.title || "Prodotti",
+      collectionPath,
+      productPath,
+      collectionTitle:
+        collection.navigationTitle ||
+        collection.title ||
+        "Prodotti",
       productTitle: item.title || ""
     };
   }
 
-  function injectCSS() {
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `
-      html.kb-v23-product ${SELECTOR}:not(.kb-v23-ready) {
-        opacity: 0 !important;
-        visibility: hidden !important;
-      }
-      html.kb-v23-product ${SELECTOR}.kb-v23-ready {
-        opacity: 1;
-        visibility: visible;
-        animation: kb-v23-fade 220ms ease-out both;
-      }
-      @keyframes kb-v23-fade {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        html.kb-v23-product ${SELECTOR}.kb-v23-ready { animation: none; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
+  // Registra la categoria quando l'utente clicca sul link filtrato.
+  document.addEventListener(
+    "click",
+    function (event) {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
 
-  // Capture the actual clicked product from a category-filtered collection.
-  document.addEventListener("click", event => {
-    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
-    if (!link) return;
-    const ctx = window.Static?.SQUARESPACE_CONTEXT;
-    const collection = ctx?.collection;
-    if (collection?.type !== 13 || !collection.fullUrl) return;
-    const collectionPath = pathOf(collection.fullUrl);
-    if (pathOf(location.href) !== collectionPath) return;
-    const category = new URL(location.href).searchParams.get("category");
-    if (!category) return;
-    const destination = pathOf(link.href);
-    if (!destination || destination === collectionPath ||
-        !destination.startsWith(collectionPath + "/")) return;
-    storageSet(ORIGIN_PREFIX + destination, {
-      category, collectionPath, timestamp: Date.now()
-    });
-  }, true);
-
-  function originCategory(product) {
-    // A direct referrer is preferred and must belong to the same collection.
-    try {
-      if (document.referrer) {
-        const ref = new URL(document.referrer);
-        if (ref.origin === location.origin && pathOf(ref.href) === product.collectionPath) {
-          const category = ref.searchParams.get("category");
-          if (category) return category;
-        }
+      const link = target.closest("a[href]");
+      if (!link) return;
+      let url;
+      try {
+        url = new URL(link.href, location.origin);
+      } catch {
+        return;
       }
-    } catch {}
 
-    const saved = storageGet(ORIGIN_PREFIX + product.productPath);
-    if (!saved || saved.collectionPath !== product.collectionPath ||
-        Date.now() - saved.timestamp > ORIGIN_TTL) return null;
-    // A saved origin is only trusted on a same-collection navigation.
-    if (document.referrer && pathOf(document.referrer) === product.collectionPath) {
-      return saved.category;
+      if (url.origin !== location.origin) return;
+      const category = url.searchParams.get("category");
+      if (!category) return;
+
+      writeStorage(NAV_KEY, {
+        category,
+        collectionPath: normalizePath(url.pathname),
+        sourceURL: url.href,
+        timestamp: Date.now()
+      });
+    },
+    true
+  );
+
+  function findNavigationCategory(product) {
+    const referrer = document.referrer;
+
+    if (referrer) {
+      const referrerPath = normalizePath(referrer);
+      if (referrerPath === product.collectionPath) {
+        const category = getCategoryFromURL(referrer);
+        if (category) return category;
+      }
     }
-    return null;
+
+    const navigation = readStorage(NAV_KEY);
+    if (!navigation) return null;
+    if (Date.now() - navigation.timestamp > CONFIG.navigationTTL) return null;
+    if (navigation.collectionPath !== product.collectionPath) return null;
+    if (!referrer || !navigation.sourceURL) return null;
+
+    try {
+      const previousURL = new URL(referrer);
+      const savedURL = new URL(navigation.sourceURL);
+      if (
+        previousURL.origin !== savedURL.origin ||
+        previousURL.pathname !== savedURL.pathname ||
+        previousURL.search !== savedURL.search
+      ) return null;
+    } catch {
+      return null;
+    }
+
+    return navigation.category || null;
   }
 
-  async function productData(product) {
-    const key = CACHE_PREFIX + product.productPath;
-    const cached = storageGet(key);
-    if (cached?.itemId === product.itemId && Date.now() - cached.timestamp < CACHE_TTL) {
+  function selectCategory(categories, product) {
+    if (!categories.length) return null;
+    const preferred = findNavigationCategory(product);
+    if (preferred) {
+      const match = categories.find(
+        category => normalizeCategory(category) === normalizeCategory(preferred)
+      );
+      if (match) {
+        log("Categoria di provenienza:", match);
+        return match;
+      }
+    }
+    log("Categoria predefinita:", categories[0]);
+    return categories[0];
+  }
+
+  async function fetchProductData(product) {
+    const cacheKey = CACHE_PREFIX + product.productPath;
+    const cached = readStorage(cacheKey);
+
+    if (
+      cached &&
+      Date.now() - cached.timestamp < CONFIG.cacheTTL &&
+      cached.itemId
+    ) {
+      log("Dati recuperati dalla cache");
       return cached.data;
     }
+
     const url = new URL(product.productPath, location.origin);
     url.searchParams.set("format", "json");
+
     const response = await fetch(url.href, {
       credentials: "same-origin",
       headers: { Accept: "application/json" }
     });
-    if (!response.ok) throw new Error("JSON HTTP " + response.status);
-    const json = await response.json();
-    if (json.item?.id !== product.itemId ||
-        pathOf(json.item?.fullUrl) !== product.productPath ||
-        pathOf(json.collection?.fullUrl) !== product.collectionPath ||
-        json.collection?.type !== 13) {
-      throw new Error("Unexpected product JSON");
+
+    if (!response.ok) {
+      throw new Error("Product JSON HTTP " + response.status);
     }
+
+    const json = await response.json();
+
+    if (
+      !json.item ||
+      !json.collection ||
+      json.collection.type !== 13 ||
+      normalizePath(json.item.fullUrl) !== product.productPath ||
+      normalizePath(json.collection.fullUrl) !== product.collectionPath
+    ) {
+      throw new Error("Dati prodotto o collection non validi");
+    }
+
     const data = {
       title: json.item.title || product.productTitle,
-      collectionTitle: json.collection.navigationTitle ||
-        json.collection.title || product.collectionTitle,
+      collectionTitle:
+        json.collection.navigationTitle ||
+        json.collection.title ||
+        product.collectionTitle,
       categories: Array.isArray(json.item.categories)
-        ? json.item.categories.filter(v => typeof v === "string" && v.trim())
+        ? json.item.categories.filter(
+            value => typeof value === "string" && value.trim()
+          )
         : []
     };
-    storageSet(key, { itemId: product.itemId, timestamp: Date.now(), data });
+
+    writeStorage(cacheKey, {
+      timestamp: Date.now(),
+      itemId: json.item.id,
+      data
+    });
+
     return data;
   }
 
-  function nativeLink(title, href) {
-    const a = document.createElement("a");
-    a.className = "ProductItem-nav-breadcrumb-link";
-    a.href = href;
-    a.textContent = title;
-    return a;
-  }
-  function separator() {
-    const span = document.createElement("span");
-    span.className = "ProductItem-nav-breadcrumb-separator";
-    span.setAttribute("aria-hidden", "true");
-    return span; // Native Squarespace CSS supplies the > symbol.
+  function createLink(text, href) {
+    const link = document.createElement("a");
+    link.className = "ProductItem-nav-breadcrumb-link kb-link";
+    link.href = href;
+    link.textContent = text;
+    return link;
   }
 
-  function render(container, product, data) {
-    const preferred = originCategory(product);
-    const categories = data.categories;
-    const category = categories.find(c => categoryKey(c) === categoryKey(preferred)) ||
-      categories[0] || null;
+  function createSeparator() {
+    const separator = document.createElement("span");
+    separator.className =
+      "ProductItem-nav-breadcrumb-separator kb-separator";
+    separator.textContent = "";
+    separator.setAttribute("aria-hidden", "true");
+    return separator;
+  }
+
+  function createCurrent(text) {
+    const element = document.createElement("span");
+    element.className = "kb-current";
+    element.textContent = shortenTitle(text);
+    element.title = text;
+    element.setAttribute("aria-current", "page");
+    return element;
+  }
+
+  function renderBreadcrumb(container, product, data) {
+    const categories = data.categories || [];
+    const category = selectCategory(categories, product);
+    const collectionTitle = data.collectionTitle || product.collectionTitle;
+    const productTitle = data.title || product.productTitle;
     const fragment = document.createDocumentFragment();
-    fragment.appendChild(nativeLink(data.collectionTitle, product.collectionPath));
-    if (category) {
-      const url = new URL(product.collectionPath, location.origin);
-      url.searchParams.set("category", category);
-      fragment.appendChild(separator());
-      fragment.appendChild(nativeLink(category, url.pathname + url.search));
-    }
-    fragment.appendChild(separator());
-    const current = document.createElement("span");
-    current.className = "ProductItem-nav-breadcrumb-link";
-    const fullTitle = data.title || product.productTitle;
-    const compact = fullTitle.replace(/\s+/g, " ").trim();
-    current.textContent = compact.length > MAX_TITLE
-      ? compact.slice(0, MAX_TITLE).trim() + "..." : compact;
-    current.title = fullTitle;
-    current.setAttribute("aria-current", "page");
-    fragment.appendChild(current);
-    container.replaceChildren(fragment);
-    container.classList.remove("kb-v23-ready");
-    // Force a fresh transition for Mercury navigation.
-    void container.offsetWidth;
-    container.classList.add("kb-v23-ready");
-  }
 
-  function waitForNative(run) {
-    return new Promise(resolve => {
-      const existing = document.querySelector(SELECTOR);
-      if (existing) return resolve(existing);
-      const observer = new MutationObserver(() => {
-        if (run !== runId) { observer.disconnect(); clearTimeout(timer); resolve(null); return; }
-        const el = document.querySelector(SELECTOR);
-        if (el) { observer.disconnect(); clearTimeout(timer); resolve(el); }
-      });
-      const timer = setTimeout(() => { observer.disconnect(); resolve(null); }, 5000);
-      observer.observe(document.documentElement, { childList: true, subtree: true });
+    fragment.appendChild(createLink(collectionTitle, product.collectionPath));
+    if (category) {
+      fragment.appendChild(createSeparator());
+      const categoryURL = new URL(product.collectionPath, location.origin);
+      categoryURL.searchParams.set("category", category);
+      fragment.appendChild(
+        createLink(category, categoryURL.pathname + categoryURL.search)
+      );
+    }
+
+    fragment.appendChild(createSeparator());
+    fragment.appendChild(createCurrent(productTitle));
+    container.replaceChildren(fragment);
+    container.classList.add("kb-ready");
+    container.setAttribute("aria-label", "Percorso di navigazione");
+
+    log("Breadcrumb aggiornata", {
+      collection: collectionTitle,
+      category,
+      product: productTitle
     });
   }
 
-  async function start() {
-    const run = ++runId;
-    document.documentElement.classList.remove("kb-v23-product");
-    const product = productContext();
+  function waitForBreadcrumb(timeout = 5000) {
+    return new Promise(resolve => {
+      const existing = document.querySelector(CONFIG.selector);
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+      let observer;
+      const timer = setTimeout(() => {
+        observer.disconnect();
+        resolve(null);
+      }, timeout);
+      observer = new MutationObserver(() => {
+        const element = document.querySelector(CONFIG.selector);
+        if (!element) return;
+        clearTimeout(timer);
+        observer.disconnect();
+        resolve(element);
+      });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+      });
+    });
+  }
+
+  async function init() {
+    const product = getProductContext();
     if (!product) return;
-    injectCSS();
-    document.documentElement.classList.add("kb-v23-product");
-    const container = await waitForNative(run);
-    if (!container || run !== runId) return;
-    container.classList.remove("kb-v23-ready");
+
+    injectStyles();
+    document.documentElement.classList.add("kb-product-page");
+
+    const container = await waitForBreadcrumb();
+    if (!container) {
+      log("Breadcrumb nativa non trovata");
+      return;
+    }
+    container.classList.add("kb-loading");
+
     try {
-      const data = await productData(product);
-      if (run !== runId || pathOf(location.href) !== product.productPath ||
-          !container.isConnected) return;
-      render(container, product, data);
+      const data = await fetchProductData(product);
+      renderBreadcrumb(container, product, data);
     } catch (error) {
-      console.warn("[Kerapho Breadcrumb V2.3]", error);
-      if (run === runId && container.isConnected) container.classList.add("kb-v23-ready");
+      console.warn("[Kerapho Breadcrumb V2]", error);
+      container.classList.remove("kb-loading");
+      container.classList.add("kb-ready");
     }
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", start, { once: true });
-  } else { start(); }
-  window.addEventListener("mercury:load", start);
-  window.addEventListener("pageshow", start);
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
 })();
